@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ôn Trắc Nghiệm (By ChanhDo)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --p: #4361ee; --p-hover: #3730a3; --s: #10b981; 
+            --d: #ef4444; --bg: #f0f2f5; --card-bg: #ffffff;
+            --text-main: #1e293b; --radius: 16px;
+        }
+
+        body { 
+            margin: 0; font-family: 'Inter', sans-serif; 
+            background: var(--bg); color: var(--text-main);
+            line-height: 1.5; -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes modalShow { 
+            from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); } 
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); } 
+        }
+        @keyframes backdropBlur {
+            from { backdrop-filter: blur(0px); background: rgba(0,0,0,0); }
+            to { backdrop-filter: blur(8px); background: rgba(0,0,0,0.4); }
+        }
+
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        .slide-in { animation: slideIn 0.4s ease forwards; }
+
+        /* --- TOPBAR --- */
+        .topbar { 
+            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(15px);
+            padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 4px 30px rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1000; 
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .logo { font-weight: 800; color: var(--p); font-size: 1.1rem; line-height: 1.1; }
+
+        /* --- BUTTONS --- */
+        button { 
+            padding: 10px 16px; border: none; border-radius: var(--radius); 
+            cursor: pointer; font-weight: 700; font-size: 0.85rem;
+            transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px;
+        }
+        button:active { transform: scale(0.95); }
+        .btn-p { background: var(--p); color: white; }
+        .btn-g { background: #ffffff; color: #475569; border: 1px solid #e2e8f0; }
+        .btn-s { background: var(--s); color: white; }
+        .btn-del { color: var(--d); background: #fee2e2; }
+
+        /* --- EXAM GRID --- */
+        .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        #examGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); gap: 20px; }
+        @media (min-width: 600px) { #examGrid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } }
+
+        .card { 
+            background: var(--card-bg); padding: 25px; 
+            border-radius: 24px; border: 1px solid #e2e8f0; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.02); transition: 0.3s;
+        }
+        .card:hover { transform: translateY(-5px); border-color: var(--p); }
+        .card b { font-size: 1.2rem; display: block; margin-bottom: 15px; }
+        .card-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .card-actions .btn-p { grid-column: span 2; padding: 14px; font-size: 1rem; }
+
+        /* --- OVERLAY LÀM MỜ (BACKDROP) --- */
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2500; display: none;
+            animation: backdropBlur 0.3s forwards;
+        }
+
+        /* --- POPUP CÀI ĐẶT MỚI --- */
+        .popup { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: white; padding: 30px; border-radius: 30px; 
+            display: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); 
+            z-index: 3000; width: 90%; max-width: 380px;
+            animation: modalShow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .overlay { 
+            position: fixed; inset: 0; background: var(--bg); 
+            display: none; flex-direction: column; z-index: 2000; 
+        }
+        .ov-header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: relative; }
+        .progress-bar { height: 4px; background: var(--p); width: 0%; position: absolute; bottom: 0; left: 0; transition: 0.3s; }
+
+        .content { flex: 1; display: flex; flex-direction: column; padding: 20px; align-items: center; overflow-y: auto; }
+        .q-box { background: white; width: 100%; max-width: 600px; padding: 30px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
+
+        .opt-quiz { padding: 16px 20px; border: 2px solid #f1f5f9; border-radius: 18px; margin-bottom: 12px; cursor: pointer; font-weight: 600; background: #fff; transition: 0.2s; }
+        .correct { background: #dcfce7 !important; border-color: var(--s) !important; color: #065f46 !important; }
+        .wrong { background: #fee2e2 !important; border-color: var(--d) !important; color: #991b1b !important; }
+
+        .img-area { width: 100%; height: 180px; border: 2px dashed #cbd5e1; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 15px; overflow: hidden; background: #f8fafc; }
+        .img-area img { width: 100%; height: 100%; object-fit: contain; }
+        .input-text { width: 100%; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; margin-bottom: 12px; outline: none; font-size: 1rem; }
+
+        .switch-label { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+        .switch-label b { font-size: 0.95rem; color: #334155; }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="logo">ÔN TRẮC NGHIỆM<br><span style="font-size:0.6rem; color:#64748b; font-weight:400">By ChanhDo</span></div>
+    <div class="header-actions">
+        <button class="btn-g" onclick="document.getElementById('fileIn').click()">📂 Tải Lên JSON</button>
+        <button class="btn-p" onclick="manualCreate()">✨ Tạo Thủ Công</button>
+    </div>
+    <input type="file" id="fileIn" hidden accept=".json" multiple>
+</div>
+
+<div class="container">
+    <div id="examGrid"></div>
+</div>
+
+<div id="modalBackdrop" class="modal-backdrop" onclick="closeSettings()"></div>
+
+<div id="setPopup" class="popup">
+    <div style="text-align:center; margin-bottom:20px">
+        <div style="background:#eef2ff; width:60px; height:60px; border-radius:20px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; color:var(--p); font-size:1.5rem">⚙️</div>
+        <h3 style="margin:0; font-size:1.3rem">Chế Độ</h3>
+    </div>
+    
+    <div style="margin-bottom:20px">
+        <label class="switch-label">
+            <b>Trộn ngẫu nhiên câu hỏi</b>
+            <input type="checkbox" id="shufQ" style="width:20px; height:20px">
+        </label>
+        <label class="switch-label">
+            <b>Trộn thứ tự đáp án</b>
+            <input type="checkbox" id="shufA" style="width:20px; height:20px">
+        </label>
+        <div style="padding-top:15px">
+            <b style="font-size:0.85rem; color:#64748b; display:block; margin-bottom:8px">THỜI GIAN LÀM BÀI (PHÚT)</b>
+            <input type="number" id="timeLimit" class="input-text" placeholder="0 = Không giới hạn thời gian">
+        </div>
+    </div>
+
+    <button class="btn-p" style="width:100%; padding:15px; justify-content:center" onclick="applySettings()">Áp dụng thay đổi</button>
+    <button onclick="closeSettings()" style="width:100%; margin-top:10px; background:none; color:#94a3b8; font-weight:400; justify-content:center">Để sau</button>
+</div>
+
+<div id="mainOverlay" class="overlay">
+    <div class="ov-header">
+        <div id="timerDisplay" style="font-weight:800; color:var(--d); background:#fee2e2; padding:4px 12px; border-radius:50px; display:none">00:00</div>
+        <div id="ovTitle" style="font-weight:800; font-size:0.9rem">Làm bài</div>
+        <div style="display:flex; gap:8px">
+            <button id="saveBtn" class="btn-s" onclick="saveEditor()">Lưu</button>
+            <button class="btn-g" onclick="closeOverlay()">Thoát</button>
+        </div>
+        <div id="pBar" class="progress-bar"></div>
+    </div>
+    <div class="content">
+        <div class="q-box" id="mainContent"></div>
+        <div id="navArea" style="display:flex; gap:10px; margin-top:15px; width:100%; max-width:600px;">
+            <button id="btnPrev" style="flex:1" class="btn-g" onclick="nav(-1)">Quay lại</button>
+            <button id="btnNext" style="flex:1" class="btn-p" onclick="nav(1)">Kế tiếp</button>
+        </div>
+        <p id="pageInfo"></p>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = "QUIZ_FINAL_SYSTEM_V2";
+    let exams = [];
+    let curExIdx = -1;
+    let curQIdx = 0;
+    let quizData = []; 
+    let timerInterval = null;
+    let isQuizMode = false;
+    let score = 0;
+    let answeredCount = 0;
+
+    function sync() { localStorage.setItem(STORAGE_KEY, JSON.stringify(exams)); }
+    function load() {
+        const d = localStorage.getItem(STORAGE_KEY);
+        if(d) { exams = JSON.parse(d); renderExams(); }
+    }
+
+    document.getElementById('fileIn').onchange = e => {
+        for(let f of e.target.files){
+            const r = new FileReader();
+            r.onload = ev => {
+                exams.push({ name: f.name.replace('.json',''), questions: JSON.parse(ev.target.result), settings: {shufQ:false, shufA:false, time:0} });
+                sync(); renderExams();
+            };
+            r.readAsText(f);
+        }
+    };
+
+    function renderExams() {
+        const grid = document.getElementById('examGrid');
+        grid.innerHTML = exams.length ? "" : "<div style='grid-column:1/-1; text-align:center; padding:50px; color:#94a3b8'>Chưa có đề nào. Hãy tạo hoặc nhập JSON!</div>";
+        exams.forEach((ex, i) => {
+            grid.innerHTML += `<div class="card">
+                <div style="font-size:0.7rem; font-weight:800; color:var(--p); margin-bottom:5px; text-transform:uppercase">${ex.questions.length} CÂU HỎI</div>
+                <b>${ex.name}</b>
+                <div class="card-actions">
+                    <button class="btn-p" onclick="startQuiz(${i})">Bắt đầu</button>
+                    <button class="btn-g" onclick="openEditor(${i})">Chỉnh Sửa</button>
+                    <button class="btn-g" onclick="openSettings(${i})">Chế Độ</button>
+                    <button class="btn-g" onclick="renameEx(${i})">Đổi Tên</button>
+                    <button class="btn-del" onclick="deleteEx(${i})">Xóa Bỏ</button>
+                </div>
+            </div>`;
+        });
+    }
+
+    function manualCreate() {
+        const name = prompt("Tên đề mới:");
+        if(!name) return;
+        exams.push({ name, questions: [{question:"", options:["","","",""], answer:"", image:""}], settings: {shufQ:false, shufA:false, time:0} });
+        sync(); openEditor(exams.length - 1);
+    }
+
+    /* --- LOGIC CÀI ĐẶT MỚI --- */
+    function openSettings(i) {
+        curExIdx = i;
+        const s = exams[i].settings;
+        document.getElementById('shufQ').checked = s.shufQ;
+        document.getElementById('shufA').checked = s.shufA;
+        document.getElementById('timeLimit').value = s.time;
+        
+        // Hiển thị với hiệu ứng
+        document.getElementById('modalBackdrop').style.display = 'block';
+        document.getElementById('setPopup').style.display = 'block';
+    }
+
+    function closeSettings() {
+        document.getElementById('modalBackdrop').style.display = 'none';
+        document.getElementById('setPopup').style.display = 'none';
+    }
+
+    function applySettings() {
+        exams[curExIdx].settings = { 
+            shufQ: document.getElementById('shufQ').checked, 
+            shufA: document.getElementById('shufA').checked, 
+            time: parseInt(document.getElementById('timeLimit').value) || 0 
+        };
+        sync(); 
+        closeSettings();
+    }
+
+    /* --- CÁC CHỨC NĂNG CŨ GIỮ NGUYÊN --- */
+    function openEditor(i) {
+        curExIdx = i; curQIdx = 0; isQuizMode = false;
+        document.getElementById('mainOverlay').style.display = 'flex';
+        document.getElementById('ovTitle').innerText = "Sửa: " + exams[i].name;
+        document.getElementById('timerDisplay').style.display = 'none';
+        document.getElementById('saveBtn').style.display = 'block';
+        document.getElementById('navArea').style.display = 'flex';
+        document.getElementById('pBar').style.width = "0%";
+        renderEditPage();
+    }
+
+    function renderEditPage() {
+        const q = exams[curExIdx].questions[curQIdx];
+        const box = document.getElementById('mainContent');
+        box.innerHTML = `
+            <div class="img-area" onclick="document.getElementById('fImg').click()">
+                ${q.image ? `<img src="${q.image}">` : '<span>📷 Thêm ảnh</span>'}
+                <input type="file" id="fImg" hidden accept="image/*" onchange="uploadImg(this)">
+            </div>
+            <textarea class="input-text" style="height:80px" placeholder="Nội dung câu hỏi..." oninput="updQ(this.value)">${q.question}</textarea>
+            <div id="optList">
+                ${q.options.map((o, i) => `
+                    <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px">
+                        <input type="radio" name="ans" ${q.answer === o && o !== "" ? 'checked' : ''} onchange="setA(${i})">
+                        <input type="text" class="input-text" style="margin:0" value="${o}" placeholder="Đ.án ${i+1}" oninput="updO(${i}, this.value)">
+                        <button class="btn-del" style="background:none; color:#cbd5e1; padding:5px" onclick="delO(${i})">✕</button>
+                    </div>
+                `).join('')}
+            </div>
+            <button onclick="addO()" style="width:100%; margin-top:10px; background:#f1f5f9; color:var(--p); font-size:0.75rem">+ Thêm đáp án</button>
+        `;
+        document.getElementById('btnPrev').disabled = (curQIdx === 0);
+        document.getElementById('btnNext').innerText = (curQIdx === exams[curExIdx].questions.length - 1) ? "Câu mới +" : "Tiếp theo";
+        document.getElementById('pageInfo').innerText = `Câu ${curQIdx + 1} / ${exams[curExIdx].questions.length}`;
+    }
+
+    function nav(step) {
+        if(step === 1 && curQIdx === exams[curExIdx].questions.length - 1) {
+            exams[curExIdx].questions.push({question:"", options:["","","",""], answer:"", image:""});
+        }
+        curQIdx += step; renderEditPage();
+    }
+
+    function updQ(v) { exams[curExIdx].questions[curQIdx].question = v; }
+    function updO(i, v) { exams[curExIdx].questions[curQIdx].options[i] = v; }
+    function setA(i) { exams[curExIdx].questions[curQIdx].answer = exams[curExIdx].questions[curQIdx].options[i]; }
+    function addO() { exams[curExIdx].questions[curQIdx].options.push(""); renderEditPage(); }
+    function delO(i) { exams[curExIdx].questions[curQIdx].options.splice(i, 1); renderEditPage(); }
+    function uploadImg(input) { if (input.files && input.files[0]) { const r = new FileReader(); r.onload = e => { exams[curExIdx].questions[curQIdx].image = e.target.result; renderEditPage(); }; r.readAsDataURL(input.files[0]); } }
+    function renameEx(i) { const n = prompt("Tên mới:", exams[i].name); if(n) { exams[i].name = n; sync(); renderExams(); } }
+    function deleteEx(i) { if(confirm("Xóa vĩnh viễn đề này?")) { exams.splice(i,1); sync(); renderExams(); } }
+
+    function startQuiz(i) {
+        curExIdx = i; curQIdx = 0; score = 0; answeredCount = 0; isQuizMode = true;
+        const ex = exams[i];
+        quizData = JSON.parse(JSON.stringify(ex.questions));
+        if(ex.settings.shufQ) quizData.sort(() => Math.random() - 0.5);
+        if(ex.settings.shufA) quizData.forEach(q => q.options.sort(() => Math.random() - 0.5));
+
+        document.getElementById('mainOverlay').style.display = 'flex';
+        document.getElementById('saveBtn').style.display = 'none';
+        document.getElementById('navArea').style.display = 'none';
+        document.getElementById('ovTitle').innerText = ex.name;
+        
+        clearInterval(timerInterval);
+        const tDisp = document.getElementById('timerDisplay');
+        if(ex.settings.time > 0) {
+            tDisp.style.display = 'block';
+            let sec = ex.settings.time * 60;
+            timerInterval = setInterval(() => {
+                let m = Math.floor(sec / 60); let s = sec % 60;
+                tDisp.innerText = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+                if(sec <= 0) { clearInterval(timerInterval); alert("Hết giờ!"); finishQuiz(); }
+                sec--;
+            }, 1000);
+        } else { tDisp.style.display = 'none'; }
+        showQuizQ();
+    }
+
+    function showQuizQ() {
+        if(curQIdx >= quizData.length) return finishQuiz();
+        const q = quizData[curQIdx];
+        const total = exams[curExIdx].questions.length;
+        document.getElementById('pBar').style.width = (answeredCount / total * 100) + "%";
+        document.getElementById('pageInfo').innerText = `ĐÃ LÀM: ${answeredCount} / ${total}`;
+
+        const box = document.getElementById('mainContent');
+        box.className = "q-box slide-in";
+        box.innerHTML = `
+            ${q.image ? `<img src="${q.image}" style="width:100%; max-height:200px; object-fit:contain; border-radius:20px; margin-bottom:15px">` : ''}
+            <h2 style="margin-bottom:20px; font-size:1.1rem">${q.question}</h2>
+            <div style="display:grid; gap:8px">
+                ${q.options.map(o => `<div class="opt-quiz" onclick="checkA(this, '${o}', '${q.answer}')">${o}</div>`).join('')}
+            </div>
+            <button style="width:100%; margin-top:20px; background:#fff7ed; color:#c2410c; justify-content:center" onclick="skipQuestion()">Bỏ qua</button>
+        `;
+    }
+
+    function checkA(el, val, correct) {
+        document.querySelectorAll('.opt-quiz').forEach(o => o.style.pointerEvents = 'none');
+        if(val === correct) { el.classList.add('correct'); score++; }
+        else { el.classList.add('wrong'); document.querySelectorAll('.opt-quiz').forEach(o => { if(o.innerText === correct) o.classList.add('correct'); }); }
+        answeredCount++;
+        setTimeout(() => { curQIdx++; showQuizQ(); }, 1000);
+    }
+
+    function skipQuestion() {
+        const currentQ = quizData.splice(curQIdx, 1)[0];
+        quizData.push(currentQ);
+        showQuizQ();
+    }
+
+    function finishQuiz() {
+        clearInterval(timerInterval);
+        document.getElementById('pBar').style.width = "100%";
+        const percent = Math.round((score/exams[curExIdx].questions.length)*100);
+        document.getElementById('mainContent').innerHTML = `
+            <div style="text-align:center; padding: 20px" class="fade-in">
+                <div style="font-size:3.5rem; margin-bottom:10px">🎯</div>
+                <h2 style="margin:0">Hoàn thành!</h2>
+                <h1 style="font-size:2.5rem; color:var(--p); margin:10px 0">${score}/${exams[curExIdx].questions.length}</h1>
+                <p style="color:#64748b; margin-bottom:20px">Độ chính xác: ${percent}%</p>
+                <button class="btn-p" style="width:100%; padding:15px; justify-content:center" onclick="location.reload()">Xong</button>
+            </div>`;
+    }
+
+    function closeOverlay() { if(isQuizMode && !confirm("Thoát bài thi?")) return; clearInterval(timerInterval); document.getElementById('mainOverlay').style.display = 'none'; }
+    function saveEditor() { sync(); document.getElementById('mainOverlay').style.display = 'none'; renderExams(); }
+
+    load();
+</script>
+</body>
+</html>
