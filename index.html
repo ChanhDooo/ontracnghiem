@@ -150,15 +150,16 @@
     <button class="btn-p" style="width:100%" onclick="closeAllPopups()">Đã hiểu</button>
 </div>
 
-<!-- Popup Chia Sẻ Qua Link -->
+<!-- Popup Chia Sẻ -->
 <div id="sharePopup" class="popup">
     <div style="text-align:center; margin-bottom:15px">
         <div style="background:#f0f9ff; width:50px; height:50px; border-radius:15px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; color:var(--p); font-size:1.2rem">🔗</div>
         <h3>Chia Sẻ Đề Thi</h3>
     </div>
-    <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px">Liên kết chia sẻ (đã bao gồm dữ liệu câu hỏi):</p>
-    <textarea id="shareLinkDisplay" class="input-text" style="font-size:0.8rem; height:80px; text-align:left; background:#f8fafc; word-break: break-all;" readonly></textarea>
-    <button class="btn-p" style="width:100%; margin-top:10px;" onclick="copyShareLink()">Sao chép liên kết</button>
+    <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px">Liên kết chia sẻ:</p>
+    <textarea id="shareLinkDisplay" class="input-text" style="font-size:0.8rem; height:80px; text-align:left; background:#f8fafc; word-break: break-all;" readonly placeholder="Đang tạo link..."></textarea>
+    <div id="shortenStatus" style="font-size:0.75rem; color:var(--p); text-align:center; margin-bottom:10px; min-height:1rem"></div>
+    <button class="btn-p" style="width:100%" onclick="copyShareLink()">Sao chép liên kết</button>
 </div>
 
 <div id="setPopup" class="popup">
@@ -239,24 +240,52 @@
         renderExams();
     }
 
-    function openShare(i) {
+    async function openShare(i) {
         const examData = exams[i];
+        document.getElementById('shareLinkDisplay').value = "Đang xử lý dữ liệu...";
+        document.getElementById('shortenStatus').innerText = "⏳ Đang nén và tạo link rút gọn...";
+        openPopup('sharePopup');
+
         try {
             const jsonStr = JSON.stringify(examData);
             const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
-            const shareUrl = window.location.origin + window.location.pathname + "?share=" + base64;
-            document.getElementById('shareLinkDisplay').value = shareUrl;
-            openPopup('sharePopup');
+            const fullUrl = window.location.origin + window.location.pathname + "?share=" + base64;
+            
+            // Cập nhật link dài trước phòng khi API lỗi
+            document.getElementById('shareLinkDisplay').value = fullUrl;
+
+            // Gọi API rút gọn link (is.gd)
+            try {
+                const response = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(fullUrl)}`);
+                const data = await response.json();
+                
+                if (data.shorturl) {
+                    document.getElementById('shareLinkDisplay').value = data.shorturl;
+                    document.getElementById('shortenStatus').innerText = "✅ Đã rút gọn thành công!";
+                    document.getElementById('shortenStatus').style.color = "var(--s)";
+                } else {
+                    throw new Error("API limit");
+                }
+            } catch (apiErr) {
+                document.getElementById('shortenStatus').innerText = "⚠️ Không thể rút gọn (Link quá dài), hãy dùng file JSON.";
+                document.getElementById('shortenStatus').style.color = "var(--d)";
+            }
+
         } catch (e) {
-            showAlert("Đề quá lớn để chia sẻ qua link!");
+            document.getElementById('shareLinkDisplay').value = "LỖI: Đề quá lớn!";
+            showAlert("Đề thi này chứa quá nhiều dữ liệu ảnh, không thể tạo link. Hãy dùng tính năng Xuất JSON.");
         }
     }
 
     function copyShareLink() {
         const link = document.getElementById("shareLinkDisplay");
-        link.select();
-        document.execCommand("copy");
-        alert("Đã sao chép liên kết chia sẻ!");
+        if(link.value.startsWith("http")) {
+            link.select();
+            document.execCommand("copy");
+            alert("Đã sao chép liên kết!");
+        } else {
+            alert("Chưa có liên kết để sao chép!");
+        }
     }
 
     function checkSharedLink() {
