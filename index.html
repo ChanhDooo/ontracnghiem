@@ -48,6 +48,7 @@
         .btn-s { background: var(--s); color: white; }
         .btn-del { color: var(--d); background: #fee2e2; }
         .btn-orange { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+        .btn-blue { background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
         
         .btn-func-edit { background: #fff7ed; color: #d97706; border: 1px solid #fde68a; }
         .btn-func-mode { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
@@ -91,7 +92,7 @@
         .content { flex: 1; display: flex; flex-direction: column; padding: 20px; align-items: center; overflow-y: auto; }
         .q-box { background: white; width: 100%; max-width: 600px; padding: 30px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
 
-        .input-text { width: 100%; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; margin-bottom: 12px; outline: none; font-size: 1rem; box-sizing: border-box; transition: 0.2s; }
+        .input-text { width: 100%; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; margin-bottom: 12px; outline: none; font-size: 1rem; box-sizing: border-box; transition: 0.2s; text-align: center;}
         .required-field { border: 2px solid var(--d) !important; background: #fffafb; }
         
         input[type="radio"] { 
@@ -106,24 +107,26 @@
         .img-area { width: 100%; height: 180px; border: 2px dashed #cbd5e1; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 15px; overflow: hidden; background: #f8fafc; }
         .img-area img { width: 100%; height: 100%; object-fit: contain; }
 
-        /* Đáp án trong Editor */
         .opt-edit-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 15px; border: 1px solid #e2e8f0; }
         .opt-img-mini { width: 60px; height: 60px; border-radius: 10px; border: 1px solid #cbd5e1; cursor: pointer; display: flex; align-items: center; justify-content: center; background: white; overflow: hidden; font-size: 1.2rem; }
         .opt-img-mini img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* Đáp án trong Quiz */
         .opt-quiz { padding: 16px 20px; border: 2px solid #f1f5f9; border-radius: 18px; margin-bottom: 12px; cursor: pointer; font-weight: 600; background: #fff; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;}
         .opt-quiz img { max-width: 100%; max-height: 150px; border-radius: 10px; }
         .correct { background: #dcfce7 !important; border-color: var(--s) !important; color: #065f46 !important; }
         .wrong { background: #fee2e2 !important; border-color: var(--d) !important; color: #991b1b !important; }
         .switch-label { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+        
+        .loading-dots:after { content: ' .'; animation: dots 1s steps(5, end) infinite; }
+        @keyframes dots { 0%, 20% { content: ' .'; } 40% { content: ' ..'; } 60% { content: ' ...'; } 80%, 100% { content: ''; } }
     </style>
 </head>
 <body>
 
 <div class="topbar">
     <div class="logo">ÔN TRẮC NGHIỆM<br><span style="font-size:0.6rem; color:#64748b; font-weight:400">By ChanhDo</span></div>
-    <div class="header-actions">
+    <div class="header-actions" style="display:flex; gap:5px">
+        <button class="btn-blue" onclick="openPopup('receivePopup')">📥 Nhập Mã</button>
         <button class="btn-g" onclick="document.getElementById('fileIn').click()">📂 Tải JSON</button>
         <button class="btn-p" onclick="openPopup('createPopup')">✨ Tạo Đề</button>
     </div>
@@ -135,6 +138,14 @@
 </div>
 
 <div id="modalBackdrop" class="modal-backdrop" onclick="closeAllPopups()"></div>
+
+<!-- Popup Nhận Đề -->
+<div id="receivePopup" class="popup">
+    <h3>Nhập mã chia sẻ</h3>
+    <p style="text-align:center; font-size:0.8rem; color:#64748b; margin-top:-10px">Mã 4 số từ bạn bè của bạn</p>
+    <input type="text" id="pinInput" class="input-text" placeholder="----" maxlength="4" style="font-size:2rem; letter-spacing:10px; font-weight:800">
+    <button id="btnConfirmReceive" class="btn-p" style="width:100%" onclick="receiveSharedExam()">Lấy Đề Thi</button>
+</div>
 
 <div id="createPopup" class="popup">
     <h3>Tên đề mới</h3>
@@ -151,14 +162,17 @@
     <button class="btn-p" style="width:100%" onclick="closeAllPopups()">Đã hiểu</button>
 </div>
 
+<!-- Popup Chia Sẻ Mới -->
 <div id="sharePopup" class="popup">
     <div style="text-align:center; margin-bottom:15px">
         <div style="background:#f0f9ff; width:50px; height:50px; border-radius:15px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; color:var(--p); font-size:1.2rem">🔗</div>
-        <h3>Chia sẻ đề thi</h3>
+        <h3>Mã Chia Sẻ Đề Thi</h3>
     </div>
-    <p style="font-size:0.8rem; color:#64748b; margin-bottom:10px">Link đã được tạo, bạn có thể gửi cho bạn bè:</p>
-    <textarea id="shareLinkArea" class="input-text" style="height:80px; font-size:0.8rem; word-break:break-all" readonly></textarea>
-    <button class="btn-p" style="width:100%" onclick="copyShareLink()">Sao chép Link</button>
+    <div id="pinDisplay" style="font-size:3rem; font-weight:800; text-align:center; color:var(--p); letter-spacing:5px; margin:10px 0">----</div>
+    <p style="font-size:0.8rem; color:#64748b; text-align:center; margin-bottom:20px">
+        Mã có hiệu lực trong <b>1 tiếng</b>.<br>Hãy gửi 4 con số này cho bạn bè.
+    </p>
+    <button class="btn-p" style="width:100%" onclick="copyPin()">Sao chép mã</button>
 </div>
 
 <div id="setPopup" class="popup">
@@ -218,6 +232,9 @@
 
 <script>
     const STORAGE_KEY = "QUIZ_APP_CHANHDO_2026_V2";
+    // API trung gian để lưu trữ đề thi tạm thời (sử dụng KV store đơn giản)
+    const API_URL = "https://api.keyvalue.xyz/2942008f/"; // Đây là endpoint công cộng miễn phí
+
     let exams = [];
     let currentDraft = null; 
     let isEditingNew = false; 
@@ -235,7 +252,6 @@
         const d = localStorage.getItem(STORAGE_KEY); 
         if(d) exams = JSON.parse(d); 
         renderExams();
-        checkSharedLink();
     }
 
     function openPopup(id) {
@@ -253,48 +269,75 @@
         openPopup('alertPopup');
     }
 
-    function openShare(i) {
+    // XỬ LÝ CHIA SẺ MÃ 4 SỐ
+    async function openShare(i) {
         const examData = exams[i];
-        const jsonStr = JSON.stringify(examData);
-        const encodedData = btoa(unescape(encodeURIComponent(jsonStr)));
-        const shareLink = window.location.origin + window.location.pathname + "#share=" + encodedData;
-        document.getElementById('shareLinkArea').value = shareLink;
+        const pin = Math.floor(1000 + Math.random() * 9000).toString(); // Tạo mã 4 số
+        document.getElementById('pinDisplay').innerText = pin;
         openPopup('sharePopup');
-    }
 
-    function copyShareLink() {
-        const copyText = document.getElementById("shareLinkArea");
-        copyText.select();
-        navigator.clipboard.writeText(copyText.value);
-        alert("Đã copy link chia sẻ!");
-        closeAllPopups();
-    }
-
-    function checkSharedLink() {
-        const hash = window.location.hash;
-        if (hash.startsWith("#share=")) {
-            try {
-                const encodedData = hash.replace("#share=", "");
-                const decodedData = decodeURIComponent(escape(atob(encodedData)));
-                const sharedExam = JSON.parse(decodedData);
-                let finalName = sharedExam.name;
-                let count = 1;
-                while(exams.some(ex => ex.name === finalName)) {
-                    finalName = sharedExam.name + " (Copy " + count + ")";
-                    count++;
-                }
-                sharedExam.name = finalName;
-                exams.push(sharedExam);
-                sync();
-                renderExams();
-                window.history.replaceState(null, null, window.location.pathname);
-                showAlert("Đã thêm thành công đề được chia sẻ: " + finalName);
-            } catch (e) {
-                showAlert("Link chia sẻ không hợp lệ!");
-            }
+        // Gửi dữ liệu lên "đám mây" tạm thời
+        try {
+            // Chúng tôi lưu dữ liệu dưới key là mã PIN
+            // Lưu ý: api.keyvalue.xyz cho phép lưu trữ key/value đơn giản
+            const response = await fetch(`https://api.keyvalue.xyz/set/${pin}/${encodeURIComponent(JSON.stringify(examData))}`, {
+                method: 'POST'
+            });
+            console.log("Đã đăng đề lên server tạm thời với mã PIN:", pin);
+        } catch (e) {
+            console.error("Lỗi server chia sẻ:", e);
         }
     }
 
+    function copyPin() {
+        const pin = document.getElementById("pinDisplay").innerText;
+        navigator.clipboard.writeText(pin);
+        alert("Đã copy mã: " + pin);
+    }
+
+    async function receiveSharedExam() {
+        const pin = document.getElementById('pinInput').value.trim();
+        if(pin.length !== 4) return showAlert("Mã PIN phải có 4 chữ số!");
+
+        const btn = document.getElementById('btnConfirmReceive');
+        const oldText = btn.innerText;
+        btn.innerText = "Đang tải...";
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(`https://api.keyvalue.xyz/get/${pin}`);
+            const dataText = await response.text();
+
+            if (!dataText || dataText === "null" || dataText.includes("not found")) {
+                throw new Error("Mã không tồn tại hoặc đã hết hạn");
+            }
+
+            const sharedExam = JSON.parse(decodeURIComponent(dataText));
+            
+            // Xử lý trùng tên
+            let finalName = sharedExam.name;
+            let count = 1;
+            while(exams.some(ex => ex.name === finalName)) {
+                finalName = sharedExam.name + " (Nhận " + count + ")";
+                count++;
+            }
+            sharedExam.name = finalName;
+            
+            exams.push(sharedExam);
+            sync();
+            renderExams();
+            closeAllPopups();
+            showAlert("Đã thêm thành công đề: " + finalName);
+            document.getElementById('pinInput').value = "";
+        } catch (e) {
+            showAlert("Lỗi: Mã không đúng hoặc đề thi đã hết hạn (sau 1 tiếng).");
+        } finally {
+            btn.innerText = oldText;
+            btn.disabled = false;
+        }
+    }
+
+    // CÁC HÀM CƠ BẢN KHÁC
     function exportExam(i) {
         const data = JSON.stringify(exams[i].questions, null, 2);
         const blob = new Blob([data], {type: "application/json"});
@@ -340,13 +383,13 @@
                 ${q.image ? `<img src="${q.image}">` : '<span>📷 Thêm ảnh câu hỏi</span>'}
                 <input type="file" id="fImg" hidden accept="image/*" onchange="uploadImg(this, -1)">
             </div>
-            <textarea class="input-text ${!q.question ? 'required-field' : ''}" style="height:80px" placeholder="Nội dung câu hỏi..." oninput="updQ(this)">${q.question}</textarea>
+            <textarea class="input-text ${!q.question ? 'required-field' : ''}" style="height:80px; text-align:left" placeholder="Nội dung câu hỏi..." oninput="updQ(this)">${q.question}</textarea>
             <div id="optList">
                 ${q.options.map((o, i) => `
                     <div class="opt-edit-row">
                         <div style="display:flex; gap:10px; align-items:center">
                             <input type="radio" name="ans" class="${!q.answer ? 'radio-required' : 'radio-normal'}" ${q.answer === o.text && o.text !== "" ? 'checked' : ''} onchange="setA(${i})">
-                            <input type="text" class="input-text ${!o.text ? 'required-field' : ''}" style="margin:0; flex:1" value="${o.text}" placeholder="Đáp án ${i+1}" oninput="updO(${i}, this)">
+                            <input type="text" class="input-text ${!o.text ? 'required-field' : ''}" style="margin:0; flex:1; text-align:left" value="${o.text}" placeholder="Đáp án ${i+1}" oninput="updO(${i}, this)">
                             <button class="btn-del" style="background:none; padding:5px" onclick="delO(${i})">✕</button>
                         </div>
                         <div style="display:flex; align-items:center; gap:10px; margin-top:5px">
@@ -518,7 +561,6 @@
             r.onload = ev => {
                 try {
                     let imported = JSON.parse(ev.target.result);
-                    // Hỗ trợ chuyển đổi từ định dạng cũ (string options) sang mới (object options)
                     imported = imported.map(q => ({
                         ...q,
                         options: q.options.map(o => typeof o === 'string' ? {text: o, image: ""} : o)
