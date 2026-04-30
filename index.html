@@ -43,18 +43,17 @@
         }
         button:active { transform: scale(0.95); }
 
-        /* Nút chính */
         .btn-p { background: var(--p); color: white; }
         .btn-g { background: #ffffff; color: #475569; border: 1px solid #e2e8f0; }
         .btn-s { background: var(--s); color: white; }
         .btn-del { color: var(--d); background: #fee2e2; }
         .btn-orange { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
         
-        /* Màu tính năng đặt biệt trên Card */
         .btn-func-edit { background: #fff7ed; color: #d97706; border: 1px solid #fde68a; }
         .btn-func-mode { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
         .btn-func-name { background: #ecfeff; color: #0891b2; border: 1px solid #cffafe; }
         .btn-func-json { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .btn-func-share { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
 
         .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
         #examGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); gap: 20px; }
@@ -145,6 +144,16 @@
     <button class="btn-p" style="width:100%" onclick="closeAllPopups()">Đã hiểu</button>
 </div>
 
+<div id="sharePopup" class="popup">
+    <div style="text-align:center; margin-bottom:15px">
+        <div style="background:#f0f9ff; width:50px; height:50px; border-radius:15px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; color:var(--p); font-size:1.2rem">🔗</div>
+        <h3>Chia sẻ đề thi</h3>
+    </div>
+    <p style="font-size:0.8rem; color:#64748b; margin-bottom:10px">Link đã được tạo, bạn có thể gửi cho bạn bè:</p>
+    <textarea id="shareLinkArea" class="input-text" style="height:80px; font-size:0.8rem; word-break:break-all" readonly></textarea>
+    <button class="btn-p" style="width:100%" onclick="copyShareLink()">Sao chép Link</button>
+</div>
+
 <div id="setPopup" class="popup">
     <h3>Chế Độ</h3>
     <label class="switch-label"><b>Trộn câu hỏi</b> <input type="checkbox" id="shufQ" style="width:20px; height:20px"></label>
@@ -215,7 +224,12 @@
     let originalQuizLength = 0;
 
     function sync() { localStorage.setItem(STORAGE_KEY, JSON.stringify(exams)); }
-    function load() { const d = localStorage.getItem(STORAGE_KEY); if(d) exams = JSON.parse(d); renderExams(); }
+    function load() { 
+        const d = localStorage.getItem(STORAGE_KEY); 
+        if(d) exams = JSON.parse(d); 
+        renderExams();
+        checkSharedLink(); // Kiểm tra xem có đề được share qua link không
+    }
 
     function openPopup(id) {
         document.getElementById('modalBackdrop').style.display = 'block';
@@ -230,6 +244,62 @@
     function showAlert(msg) { 
         document.getElementById('alertMsg').innerText = msg; 
         openPopup('alertPopup');
+    }
+
+    // TÍNH NĂNG CHIA SẺ
+    function openShare(i) {
+        const examData = exams[i];
+        // Mã hóa toàn bộ object thành chuỗi Base64
+        // Dùng encodeURIComponent và btoa để xử lý ký tự tiếng Việt
+        const jsonStr = JSON.stringify(examData);
+        const encodedData = btoa(unescape(encodeURIComponent(jsonStr)));
+        
+        // Tạo link (giữ lại địa chỉ gốc và thêm hash share)
+        const shareLink = window.location.origin + window.location.pathname + "#share=" + encodedData;
+        
+        document.getElementById('shareLinkArea').value = shareLink;
+        openPopup('sharePopup');
+    }
+
+    function copyShareLink() {
+        const copyText = document.getElementById("shareLinkArea");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(copyText.value);
+        alert("Đã copy link chia sẻ!");
+        closeAllPopups();
+    }
+
+    function checkSharedLink() {
+        const hash = window.location.hash;
+        if (hash.startsWith("#share=")) {
+            try {
+                const encodedData = hash.replace("#share=", "");
+                const decodedData = decodeURIComponent(escape(atob(encodedData)));
+                const sharedExam = JSON.parse(decodedData);
+                
+                // Tránh trùng lặp tên
+                let finalName = sharedExam.name;
+                let count = 1;
+                while(exams.some(ex => ex.name === finalName)) {
+                    finalName = sharedExam.name + " (Copy " + count + ")";
+                    count++;
+                }
+                sharedExam.name = finalName;
+                
+                exams.push(sharedExam);
+                sync();
+                renderExams();
+                
+                // Xóa hash trên URL để không bị add lại khi reload
+                window.history.replaceState(null, null, window.location.pathname);
+                
+                showAlert("Đã thêm thành công đề được chia sẻ: " + finalName);
+            } catch (e) {
+                console.error("Lỗi giải mã đề share:", e);
+                showAlert("Link chia sẻ không hợp lệ hoặc đã hết hạn!");
+            }
+        }
     }
 
     function exportExam(i) {
@@ -304,13 +374,11 @@
     function delO(i) { if(currentDraft.questions[curQIdx].options.length > 2) { currentDraft.questions[curQIdx].options.splice(i, 1); renderEditPage(); } }
 
     function saveEditor() {
-        // 1. Loại bỏ các câu hoàn toàn rỗng (do người dùng nhấn "Câu mới" nhưng chưa viết gì)
         currentDraft.questions = currentDraft.questions.filter(q => {
             const isEmpty = q.question.trim() === "" && q.options.every(o => o.trim() === "") && q.answer === "" && q.image === "";
             return !isEmpty;
         });
 
-        // 2. Kiểm tra tính đầy đủ của các câu còn lại
         for(let j=0; j < currentDraft.questions.length; j++) {
             const q = currentDraft.questions[j];
             const hasQ = q.question.trim() !== "";
@@ -326,7 +394,6 @@
             }
         }
 
-        // 3. Kiểm tra số lượng tối thiểu
         if(currentDraft.questions.length < 2) {
             return showAlert("Đề thi cần ít nhất 2 câu hỏi hoàn chỉnh mới có thể lưu!");
         }
@@ -443,6 +510,7 @@
                 <div class="card-actions">
                     <button class="btn-start" onclick="startQuiz(${i})">Bắt đầu</button>
                     <button class="btn-func-edit" onclick="openEditor(${i})">Sửa</button>
+                    <button class="btn-func-share" onclick="openShare(${i})">Chia sẻ</button>
                     <button class="btn-func-mode" onclick="openSettings(${i})">Chế Độ</button>
                     <button class="btn-func-name" onclick="openRename(${i})">Đổi Tên</button>
                     <button class="btn-func-json" onclick="exportExam(${i})">Xuất JSON</button>
