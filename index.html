@@ -106,7 +106,14 @@
         .img-area { width: 100%; height: 180px; border: 2px dashed #cbd5e1; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 15px; overflow: hidden; background: #f8fafc; }
         .img-area img { width: 100%; height: 100%; object-fit: contain; }
 
-        .opt-quiz { padding: 16px 20px; border: 2px solid #f1f5f9; border-radius: 18px; margin-bottom: 12px; cursor: pointer; font-weight: 600; background: #fff; transition: 0.2s; }
+        /* Đáp án trong Editor */
+        .opt-edit-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 15px; border: 1px solid #e2e8f0; }
+        .opt-img-mini { width: 60px; height: 60px; border-radius: 10px; border: 1px solid #cbd5e1; cursor: pointer; display: flex; align-items: center; justify-content: center; background: white; overflow: hidden; font-size: 1.2rem; }
+        .opt-img-mini img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Đáp án trong Quiz */
+        .opt-quiz { padding: 16px 20px; border: 2px solid #f1f5f9; border-radius: 18px; margin-bottom: 12px; cursor: pointer; font-weight: 600; background: #fff; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;}
+        .opt-quiz img { max-width: 100%; max-height: 150px; border-radius: 10px; }
         .correct { background: #dcfce7 !important; border-color: var(--s) !important; color: #065f46 !important; }
         .wrong { background: #fee2e2 !important; border-color: var(--d) !important; color: #991b1b !important; }
         .switch-label { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
@@ -210,7 +217,7 @@
 </div>
 
 <script>
-    const STORAGE_KEY = "QUIZ_APP_CHANHDO_2026";
+    const STORAGE_KEY = "QUIZ_APP_CHANHDO_2026_V2";
     let exams = [];
     let currentDraft = null; 
     let isEditingNew = false; 
@@ -228,7 +235,7 @@
         const d = localStorage.getItem(STORAGE_KEY); 
         if(d) exams = JSON.parse(d); 
         renderExams();
-        checkSharedLink(); // Kiểm tra xem có đề được share qua link không
+        checkSharedLink();
     }
 
     function openPopup(id) {
@@ -246,17 +253,11 @@
         openPopup('alertPopup');
     }
 
-    // TÍNH NĂNG CHIA SẺ
     function openShare(i) {
         const examData = exams[i];
-        // Mã hóa toàn bộ object thành chuỗi Base64
-        // Dùng encodeURIComponent và btoa để xử lý ký tự tiếng Việt
         const jsonStr = JSON.stringify(examData);
         const encodedData = btoa(unescape(encodeURIComponent(jsonStr)));
-        
-        // Tạo link (giữ lại địa chỉ gốc và thêm hash share)
         const shareLink = window.location.origin + window.location.pathname + "#share=" + encodedData;
-        
         document.getElementById('shareLinkArea').value = shareLink;
         openPopup('sharePopup');
     }
@@ -264,7 +265,6 @@
     function copyShareLink() {
         const copyText = document.getElementById("shareLinkArea");
         copyText.select();
-        copyText.setSelectionRange(0, 99999);
         navigator.clipboard.writeText(copyText.value);
         alert("Đã copy link chia sẻ!");
         closeAllPopups();
@@ -277,8 +277,6 @@
                 const encodedData = hash.replace("#share=", "");
                 const decodedData = decodeURIComponent(escape(atob(encodedData)));
                 const sharedExam = JSON.parse(decodedData);
-                
-                // Tránh trùng lặp tên
                 let finalName = sharedExam.name;
                 let count = 1;
                 while(exams.some(ex => ex.name === finalName)) {
@@ -286,18 +284,13 @@
                     count++;
                 }
                 sharedExam.name = finalName;
-                
                 exams.push(sharedExam);
                 sync();
                 renderExams();
-                
-                // Xóa hash trên URL để không bị add lại khi reload
                 window.history.replaceState(null, null, window.location.pathname);
-                
                 showAlert("Đã thêm thành công đề được chia sẻ: " + finalName);
             } catch (e) {
-                console.error("Lỗi giải mã đề share:", e);
-                showAlert("Link chia sẻ không hợp lệ hoặc đã hết hạn!");
+                showAlert("Link chia sẻ không hợp lệ!");
             }
         }
     }
@@ -315,7 +308,11 @@
         const name = document.getElementById('createNameInput').value.trim();
         if(!name) return showAlert("Vui lòng nhập tên đề!");
         if(exams.some(ex => ex.name.toLowerCase() === name.toLowerCase())) return showAlert("Tên đã tồn tại!");
-        currentDraft = { name, questions: [{question:"", options:["",""], answer:"", image:""}], settings: {shufQ:false, shufA:false, time:0} };
+        currentDraft = { 
+            name, 
+            questions: [{question:"", options:[{text:"", image:""},{text:"", image:""}], answer:"", image:""}], 
+            settings: {shufQ:false, shufA:false, time:0} 
+        };
         isEditingNew = true; curQIdx = 0; isQuizMode = false;
         closeAllPopups();
         document.getElementById('createNameInput').value = "";
@@ -340,20 +337,30 @@
         const q = currentDraft.questions[curQIdx];
         document.getElementById('mainContent').innerHTML = `
             <div class="img-area" onclick="document.getElementById('fImg').click()">
-                ${q.image ? `<img src="${q.image}">` : '<span>📷 Thêm ảnh (Tùy chọn)</span>'}
-                <input type="file" id="fImg" hidden accept="image/*" onchange="uploadImg(this)">
+                ${q.image ? `<img src="${q.image}">` : '<span>📷 Thêm ảnh câu hỏi</span>'}
+                <input type="file" id="fImg" hidden accept="image/*" onchange="uploadImg(this, -1)">
             </div>
             <textarea class="input-text ${!q.question ? 'required-field' : ''}" style="height:80px" placeholder="Nội dung câu hỏi..." oninput="updQ(this)">${q.question}</textarea>
             <div id="optList">
                 ${q.options.map((o, i) => `
-                    <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px">
-                        <input type="radio" name="ans" class="${!q.answer ? 'radio-required' : 'radio-normal'}" ${q.answer === o && o !== "" ? 'checked' : ''} onchange="setA(${i})">
-                        <input type="text" class="input-text ${!o ? 'required-field' : ''}" style="margin:0" value="${o}" placeholder="Đ.án ${i+1}" oninput="updO(${i}, this)">
-                        <button class="btn-del" style="background:none" onclick="delO(${i})">✕</button>
+                    <div class="opt-edit-row">
+                        <div style="display:flex; gap:10px; align-items:center">
+                            <input type="radio" name="ans" class="${!q.answer ? 'radio-required' : 'radio-normal'}" ${q.answer === o.text && o.text !== "" ? 'checked' : ''} onchange="setA(${i})">
+                            <input type="text" class="input-text ${!o.text ? 'required-field' : ''}" style="margin:0; flex:1" value="${o.text}" placeholder="Đáp án ${i+1}" oninput="updO(${i}, this)">
+                            <button class="btn-del" style="background:none; padding:5px" onclick="delO(${i})">✕</button>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px; margin-top:5px">
+                            <div class="opt-img-mini" onclick="document.getElementById('fImgOpt${i}').click()">
+                                ${o.image ? `<img src="${o.image}">` : '📷'}
+                            </div>
+                            <span style="font-size:0.7rem; color:#64748b">${o.image ? 'Đã có ảnh' : 'Thêm ảnh đáp án'}</span>
+                            <input type="file" id="fImgOpt${i}" hidden accept="image/*" onchange="uploadImg(this, ${i})">
+                            ${o.image ? `<button class="btn-del" style="font-size:0.6rem; padding:4px 8px" onclick="removeOptImg(${i})">Xóa ảnh</button>` : ''}
+                        </div>
                     </div>
                 `).join('')}
             </div>
-            <button onclick="addO()" style="width:100%; margin-top:10px; background:#f1f5f9; color:var(--p)">+ Thêm đáp án</button>
+            <button onclick="addO()" style="width:100%; margin-top:10px; background:#f1f5f9; color:var(--p); padding:12px; border-radius:12px">+ Thêm đáp án</button>
         `;
         document.getElementById('btnPrev').disabled = (curQIdx === 0);
         document.getElementById('btnNext').innerText = (curQIdx === currentDraft.questions.length - 1) ? "Câu mới +" : "Kế tiếp";
@@ -362,41 +369,40 @@
 
     function nav(step) {
         if(step === 1 && curQIdx === currentDraft.questions.length - 1) {
-            currentDraft.questions.push({question:"", options:["",""], answer:"", image:""});
+            currentDraft.questions.push({question:"", options:[{text:"", image:""},{text:"", image:""}], answer:"", image:""});
         }
         curQIdx += step; renderEditPage();
     }
 
     function updQ(el) { currentDraft.questions[curQIdx].question = el.value; el.classList.toggle('required-field', !el.value.trim()); }
-    function updO(i, el) { currentDraft.questions[curQIdx].options[i] = el.value; el.classList.toggle('required-field', !el.value.trim()); }
-    function setA(i) { currentDraft.questions[curQIdx].answer = currentDraft.questions[curQIdx].options[i]; renderEditPage(); }
-    function addO() { currentDraft.questions[curQIdx].options.push(""); renderEditPage(); }
+    function updO(i, el) { currentDraft.questions[curQIdx].options[i].text = el.value; el.classList.toggle('required-field', !el.value.trim()); }
+    function setA(i) { currentDraft.questions[curQIdx].answer = currentDraft.questions[curQIdx].options[i].text; renderEditPage(); }
+    function addO() { currentDraft.questions[curQIdx].options.push({text:"", image:""}); renderEditPage(); }
     function delO(i) { if(currentDraft.questions[curQIdx].options.length > 2) { currentDraft.questions[curQIdx].options.splice(i, 1); renderEditPage(); } }
+    function removeOptImg(i) { currentDraft.questions[curQIdx].options[i].image = ""; renderEditPage(); }
 
     function saveEditor() {
         currentDraft.questions = currentDraft.questions.filter(q => {
-            const isEmpty = q.question.trim() === "" && q.options.every(o => o.trim() === "") && q.answer === "" && q.image === "";
+            const isEmpty = q.question.trim() === "" && q.options.every(o => o.text.trim() === "") && q.answer === "" && q.image === "";
             return !isEmpty;
         });
 
         for(let j=0; j < currentDraft.questions.length; j++) {
             const q = currentDraft.questions[j];
             const hasQ = q.question.trim() !== "";
-            const hasAllOpts = q.options.length >= 2 && q.options.every(o => o.trim() !== "");
-            const hasAns = q.answer !== "" && q.options.includes(q.answer);
+            const hasAllOpts = q.options.length >= 2 && q.options.every(o => o.text.trim() !== "");
+            const hasAns = q.answer !== "" && q.options.some(o => o.text === q.answer);
 
             if(!hasQ || !hasAllOpts || !hasAns) {
                 curQIdx = j; renderEditPage();
                 if(!hasQ) showAlert(`Câu ${j+1} bị thiếu nội dung câu hỏi!`);
-                else if(!hasAllOpts) showAlert(`Câu ${j+1} bị thiếu đáp án hoặc ô trống!`);
+                else if(!hasAllOpts) showAlert(`Câu ${j+1} bị thiếu nội dung đáp án!`);
                 else showAlert(`Câu ${j+1} chưa chọn đáp án đúng!`);
                 return;
             }
         }
 
-        if(currentDraft.questions.length < 2) {
-            return showAlert("Đề thi cần ít nhất 2 câu hỏi hoàn chỉnh mới có thể lưu!");
-        }
+        if(currentDraft.questions.length < 1) return showAlert("Đề thi cần ít nhất 1 câu hỏi!");
 
         if(isEditingNew) exams.push(currentDraft); else exams[curExIdx] = currentDraft;
         sync(); renderExams(); currentDraft = null; 
@@ -422,10 +428,12 @@
         originalQuizLength = quizData.length;
         if(ex.settings.shufQ) quizData.sort(() => Math.random() - 0.5);
         if(ex.settings.shufA) quizData.forEach(q => q.options.sort(() => Math.random() - 0.5));
+        
         document.getElementById('mainOverlay').style.display = 'flex';
         document.getElementById('saveBtn').style.display = 'none';
         document.getElementById('navArea').style.display = 'none';
         document.getElementById('ovTitle').innerText = ex.name;
+        
         clearInterval(timerInterval);
         if(ex.settings.time > 0) {
             document.getElementById('timerDisplay').style.display = 'block';
@@ -445,21 +453,35 @@
         document.getElementById('pBar').style.width = (answeredCount/originalQuizLength*100) + "%";
         document.getElementById('pageInfo').innerText = `TIẾN ĐỘ: ${answeredCount} / ${originalQuizLength}`;
         document.getElementById('mainContent').innerHTML = `
-            ${q.image ? `<img src="${q.image}" style="width:100%; max-height:180px; object-fit:contain; border-radius:15px; margin-bottom:15px">` : ''}
-            <h2 style="margin-bottom:20px; font-size:1.1rem">${q.question}</h2>
-            <div style="display:grid; gap:8px">
-                ${q.options.map(o => `<div class="opt-quiz" onclick="checkA(this, '${o}', '${q.answer}')">${o}</div>`).join('')}
+            ${q.image ? `<img src="${q.image}" style="width:100%; max-height:200px; object-fit:contain; border-radius:15px; margin-bottom:15px">` : ''}
+            <h2 style="margin-bottom:20px; font-size:1.1rem; text-align:center">${q.question}</h2>
+            <div style="display:grid; gap:12px">
+                ${q.options.map(o => `
+                    <div class="opt-quiz" onclick="checkA(this, '${o.text.replace(/'/g, "\\'")}', '${q.answer.replace(/'/g, "\\'")}')">
+                        ${o.image ? `<img src="${o.image}">` : ''}
+                        <span>${o.text}</span>
+                    </div>
+                `).join('')}
             </div>
-            <button class="btn-orange" style="width:100%; margin-top:20px" onclick="skipQ()">Bỏ qua</button>
+            <button class="btn-orange" style="width:100%; margin-top:20px; padding:12px" onclick="skipQ()">Bỏ qua câu này</button>
         `;
     }
 
     function checkA(el, val, correct) {
         document.querySelectorAll('.opt-quiz').forEach(o => o.style.pointerEvents = 'none');
         if(val === correct) { el.classList.add('correct'); score++; }
-        else { el.classList.add('wrong'); document.querySelectorAll('.opt-quiz').forEach(o => { if(o.innerText === correct) o.classList.add('correct'); }); }
+        else { 
+            el.classList.add('wrong'); 
+            document.querySelectorAll('.opt-quiz').forEach(o => {
+                if(o.querySelector('span').innerText === correct) o.classList.add('correct');
+            });
+        }
         answeredCount++;
-        setTimeout(() => { quizData.splice(curQIdx, 1); if(curQIdx >= quizData.length) curQIdx = 0; showQuizQ(); }, 1200);
+        setTimeout(() => { 
+            quizData.splice(curQIdx, 1); 
+            if(curQIdx >= quizData.length) curQIdx = 0; 
+            showQuizQ(); 
+        }, 1200);
     }
 
     function skipQ() {
@@ -473,11 +495,12 @@
         document.getElementById('mainContent').innerHTML = `
             <div style="text-align:center; padding:20px">
                 <div style="font-size:3rem; margin-bottom:10px">🎯</div>
-                <h2>Kết quả</h2>
+                <h2>Hoàn thành!</h2>
                 <h1 style="color:var(--p); font-size:2.5rem; margin:10px 0">${score}/${originalQuizLength}</h1>
+                <p style="color:#64748b">Bạn đã trả lời đúng ${(score/originalQuizLength*100).toFixed(1)}%</p>
                 <div style="display:grid; gap:10px; margin-top:20px">
                     <button class="btn-p" style="padding:15px" onclick="startQuiz(curExIdx)">Làm lại</button>
-                    <button class="btn-g" style="padding:15px" onclick="location.reload()">Xong</button>
+                    <button class="btn-g" style="padding:15px" onclick="location.reload()">Trở về trang chủ</button>
                 </div>
             </div>`;
     }
@@ -493,8 +516,16 @@
         for(let f of e.target.files){
             const r = new FileReader();
             r.onload = ev => {
-                exams.push({ name: f.name.replace('.json',''), questions: JSON.parse(ev.target.result), settings: {shufQ:false, shufA:false, time:0} });
-                sync(); renderExams();
+                try {
+                    let imported = JSON.parse(ev.target.result);
+                    // Hỗ trợ chuyển đổi từ định dạng cũ (string options) sang mới (object options)
+                    imported = imported.map(q => ({
+                        ...q,
+                        options: q.options.map(o => typeof o === 'string' ? {text: o, image: ""} : o)
+                    }));
+                    exams.push({ name: f.name.replace('.json',''), questions: imported, settings: {shufQ:false, shufA:false, time:0} });
+                    sync(); renderExams();
+                } catch(e) { showAlert("Lỗi định dạng file!"); }
             };
             r.readAsText(f);
         }
@@ -520,7 +551,21 @@
         });
     }
 
-    function uploadImg(input) { if (input.files[0]) { const r = new FileReader(); r.onload = e => { currentDraft.questions[curQIdx].image = e.target.result; renderEditPage(); }; r.readAsDataURL(input.files[0]); } }
+    function uploadImg(input, optIdx) { 
+        if (input.files[0]) { 
+            const r = new FileReader(); 
+            r.onload = e => { 
+                if(optIdx === -1) {
+                    currentDraft.questions[curQIdx].image = e.target.result; 
+                } else {
+                    currentDraft.questions[curQIdx].options[optIdx].image = e.target.result;
+                }
+                renderEditPage(); 
+            }; 
+            r.readAsDataURL(input.files[0]); 
+        } 
+    }
+    
     load();
 </script>
 </body>
