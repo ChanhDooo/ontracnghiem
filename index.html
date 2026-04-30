@@ -80,7 +80,7 @@
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
             background: white; padding: 30px; border-radius: 30px; 
             display: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); 
-            z-index: 3000; width: 90%; max-width: 380px;
+            z-index: 3000; width: 90%; max-width: 450px;
             animation: modalShow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .popup h3 { text-align: center; margin-top: 0; margin-bottom: 15px; font-size: 1.25rem; }
@@ -116,9 +116,6 @@
         .correct { background: #dcfce7 !important; border-color: var(--s) !important; color: #065f46 !important; }
         .wrong { background: #fee2e2 !important; border-color: var(--d) !important; color: #991b1b !important; }
         .switch-label { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
-        
-        .loading-dots:after { content: ' .'; animation: dots 1s steps(5, end) infinite; }
-        @keyframes dots { 0%, 20% { content: ' .'; } 40% { content: ' ..'; } 60% { content: ' ...'; } 80%, 100% { content: ''; } }
     </style>
 </head>
 <body>
@@ -126,7 +123,6 @@
 <div class="topbar">
     <div class="logo">ÔN TRẮC NGHIỆM<br><span style="font-size:0.6rem; color:#64748b; font-weight:400">By ChanhDo</span></div>
     <div class="header-actions" style="display:flex; gap:5px">
-        <button class="btn-blue" onclick="openPopup('receivePopup')">📥 Nhập Mã</button>
         <button class="btn-g" onclick="document.getElementById('fileIn').click()">📂 Tải JSON</button>
         <button class="btn-p" onclick="openPopup('createPopup')">✨ Tạo Đề</button>
     </div>
@@ -138,14 +134,6 @@
 </div>
 
 <div id="modalBackdrop" class="modal-backdrop" onclick="closeAllPopups()"></div>
-
-<!-- Popup Nhận Đề -->
-<div id="receivePopup" class="popup">
-    <h3>Nhập mã chia sẻ</h3>
-    <p style="text-align:center; font-size:0.8rem; color:#64748b; margin-top:-10px">Mã 4 số từ bạn bè của bạn</p>
-    <input type="text" id="pinInput" class="input-text" placeholder="----" maxlength="4" style="font-size:2rem; letter-spacing:10px; font-weight:800">
-    <button id="btnConfirmReceive" class="btn-p" style="width:100%" onclick="receiveSharedExam()">Lấy Đề Thi</button>
-</div>
 
 <div id="createPopup" class="popup">
     <h3>Tên đề mới</h3>
@@ -162,17 +150,15 @@
     <button class="btn-p" style="width:100%" onclick="closeAllPopups()">Đã hiểu</button>
 </div>
 
-<!-- Popup Chia Sẻ Mới -->
+<!-- Popup Chia Sẻ Qua Link -->
 <div id="sharePopup" class="popup">
     <div style="text-align:center; margin-bottom:15px">
         <div style="background:#f0f9ff; width:50px; height:50px; border-radius:15px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; color:var(--p); font-size:1.2rem">🔗</div>
-        <h3>Mã Chia Sẻ Đề Thi</h3>
+        <h3>Chia Sẻ Đề Thi</h3>
     </div>
-    <div id="pinDisplay" style="font-size:3rem; font-weight:800; text-align:center; color:var(--p); letter-spacing:5px; margin:10px 0">----</div>
-    <p style="font-size:0.8rem; color:#64748b; text-align:center; margin-bottom:20px">
-        Mã có hiệu lực trong <b>3 phút</b>.<br>Hãy gửi 4 con số này cho bạn bè.
-    </p>
-    <button class="btn-p" style="width:100%" onclick="copyPin()">Sao chép mã</button>
+    <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px">Liên kết chia sẻ (đã bao gồm dữ liệu câu hỏi):</p>
+    <textarea id="shareLinkDisplay" class="input-text" style="font-size:0.8rem; height:80px; text-align:left; background:#f8fafc; word-break: break-all;" readonly></textarea>
+    <button class="btn-p" style="width:100%; margin-top:10px;" onclick="copyShareLink()">Sao chép liên kết</button>
 </div>
 
 <div id="setPopup" class="popup">
@@ -232,9 +218,6 @@
 
 <script>
     const STORAGE_KEY = "QUIZ_APP_CHANHDO_2026_V2";
-    // API trung gian để lưu trữ đề thi tạm thời (sử dụng KV store đơn giản)
-    const API_URL = "https://api.keyvalue.xyz/2942008f/"; // Đây là endpoint công cộng miễn phí
-
     let exams = [];
     let currentDraft = null; 
     let isEditingNew = false; 
@@ -248,10 +231,58 @@
     let originalQuizLength = 0;
 
     function sync() { localStorage.setItem(STORAGE_KEY, JSON.stringify(exams)); }
+    
     function load() { 
         const d = localStorage.getItem(STORAGE_KEY); 
         if(d) exams = JSON.parse(d); 
+        checkSharedLink(); 
         renderExams();
+    }
+
+    function openShare(i) {
+        const examData = exams[i];
+        try {
+            const jsonStr = JSON.stringify(examData);
+            const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
+            const shareUrl = window.location.origin + window.location.pathname + "?share=" + base64;
+            document.getElementById('shareLinkDisplay').value = shareUrl;
+            openPopup('sharePopup');
+        } catch (e) {
+            showAlert("Đề quá lớn để chia sẻ qua link!");
+        }
+    }
+
+    function copyShareLink() {
+        const link = document.getElementById("shareLinkDisplay");
+        link.select();
+        document.execCommand("copy");
+        alert("Đã sao chép liên kết chia sẻ!");
+    }
+
+    function checkSharedLink() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const shareData = urlParams.get('share');
+        if (shareData) {
+            try {
+                const jsonStr = decodeURIComponent(escape(atob(shareData)));
+                const sharedExam = JSON.parse(jsonStr);
+                let finalName = sharedExam.name;
+                let count = 1;
+                while(exams.some(ex => ex.name === finalName)) {
+                    finalName = sharedExam.name + " (Nhận " + count + ")";
+                    count++;
+                }
+                sharedExam.name = finalName;
+                exams.push(sharedExam);
+                sync();
+                window.history.replaceState({}, document.title, window.location.pathname);
+                setTimeout(() => {
+                    showAlert("Hệ thống đã tự động thêm đề: " + finalName);
+                }, 500);
+            } catch (e) {
+                console.error("Link chia sẻ không hợp lệ");
+            }
+        }
     }
 
     function openPopup(id) {
@@ -269,84 +300,6 @@
         openPopup('alertPopup');
     }
 
-    // XỬ LÝ CHIA SẺ MÃ 4 SỐ
-    async function openShare(i) {
-        const examData = exams[i];
-        const pin = Math.floor(1000 + Math.random() * 9000).toString(); // Tạo mã 4 số
-        document.getElementById('pinDisplay').innerText = pin;
-        openPopup('sharePopup');
-
-        // Gửi dữ liệu lên "đám mây" tạm thời
-        try {
-            // Thiết lập xóa mã sau 3 phút (180.000 ms)
-            // Lưu ý: api.keyvalue.xyz cho phép lưu trữ key/value đơn giản
-            const response = await fetch(`https://api.keyvalue.xyz/set/${pin}/${encodeURIComponent(JSON.stringify(examData))}`, {
-                method: 'POST'
-            });
-            console.log("Đã đăng đề lên server tạm thời với mã PIN:", pin);
-            
-            // Xóa mã sau 3 phút
-            setTimeout(async () => {
-                try {
-                    await fetch(`https://api.keyvalue.xyz/set/${pin}/null`, { method: 'POST' });
-                    console.log("Mã PIN " + pin + " đã hết hạn và bị xóa.");
-                } catch (e) {}
-            }, 180000); // 3 phút = 180.000ms
-
-        } catch (e) {
-            console.error("Lỗi server chia sẻ:", e);
-        }
-    }
-
-    function copyPin() {
-        const pin = document.getElementById("pinDisplay").innerText;
-        navigator.clipboard.writeText(pin);
-        alert("Đã copy mã: " + pin);
-    }
-
-    async function receiveSharedExam() {
-        const pin = document.getElementById('pinInput').value.trim();
-        if(pin.length !== 4) return showAlert("Mã PIN phải có 4 chữ số!");
-
-        const btn = document.getElementById('btnConfirmReceive');
-        const oldText = btn.innerText;
-        btn.innerText = "Đang tải...";
-        btn.disabled = true;
-
-        try {
-            const response = await fetch(`https://api.keyvalue.xyz/get/${pin}`);
-            const dataText = await response.text();
-
-            if (!dataText || dataText === "null" || dataText.includes("not found")) {
-                throw new Error("Mã không tồn tại hoặc đã hết hạn");
-            }
-
-            const sharedExam = JSON.parse(decodeURIComponent(dataText));
-            
-            // Xử lý trùng tên
-            let finalName = sharedExam.name;
-            let count = 1;
-            while(exams.some(ex => ex.name === finalName)) {
-                finalName = sharedExam.name + " (Nhận " + count + ")";
-                count++;
-            }
-            sharedExam.name = finalName;
-            
-            exams.push(sharedExam);
-            sync();
-            renderExams();
-            closeAllPopups();
-            showAlert("Đã thêm thành công đề: " + finalName);
-            document.getElementById('pinInput').value = "";
-        } catch (e) {
-            showAlert("Lỗi: Mã không đúng hoặc đề thi đã hết hạn (sau 3 phút).");
-        } finally {
-            btn.innerText = oldText;
-            btn.disabled = false;
-        }
-    }
-
-    // CÁC HÀM CƠ BẢN KHÁC
     function exportExam(i) {
         const data = JSON.stringify(exams[i].questions, null, 2);
         const blob = new Blob([data], {type: "application/json"});
@@ -438,13 +391,11 @@
             const isEmpty = q.question.trim() === "" && q.options.every(o => o.text.trim() === "") && q.answer === "" && q.image === "";
             return !isEmpty;
         });
-
         for(let j=0; j < currentDraft.questions.length; j++) {
             const q = currentDraft.questions[j];
             const hasQ = q.question.trim() !== "";
             const hasAllOpts = q.options.length >= 2 && q.options.every(o => o.text.trim() !== "");
             const hasAns = q.answer !== "" && q.options.some(o => o.text === q.answer);
-
             if(!hasQ || !hasAllOpts || !hasAns) {
                 curQIdx = j; renderEditPage();
                 if(!hasQ) showAlert(`Câu ${j+1} bị thiếu nội dung câu hỏi!`);
@@ -453,9 +404,7 @@
                 return;
             }
         }
-
         if(currentDraft.questions.length < 1) return showAlert("Đề thi cần ít nhất 1 câu hỏi!");
-
         if(isEditingNew) exams.push(currentDraft); else exams[curExIdx] = currentDraft;
         sync(); renderExams(); currentDraft = null; 
         document.getElementById('mainOverlay').style.display = 'none';
@@ -480,12 +429,10 @@
         originalQuizLength = quizData.length;
         if(ex.settings.shufQ) quizData.sort(() => Math.random() - 0.5);
         if(ex.settings.shufA) quizData.forEach(q => q.options.sort(() => Math.random() - 0.5));
-        
         document.getElementById('mainOverlay').style.display = 'flex';
         document.getElementById('saveBtn').style.display = 'none';
         document.getElementById('navArea').style.display = 'none';
         document.getElementById('ovTitle').innerText = ex.name;
-        
         clearInterval(timerInterval);
         if(ex.settings.time > 0) {
             document.getElementById('timerDisplay').style.display = 'block';
@@ -616,7 +563,6 @@
             r.readAsDataURL(input.files[0]); 
         } 
     }
-    
     load();
 </script>
 </body>
