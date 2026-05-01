@@ -109,7 +109,6 @@
 
         .opt-edit-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 18px; border: 1px solid #e2e8f0; }
         
-        /* CHỈNH SỬA NÚT ẢNH GỌN NHẤT */
         .opt-img-mini { width: 40px; height: 40px; border-radius: 10px; border: 1px solid #cbd5e1; cursor: pointer; display: flex; align-items: center; justify-content: center; background: white; overflow: hidden; font-size: 1rem; flex-shrink: 0; position: relative; }
         .opt-img-mini img { width: 100%; height: 100%; object-fit: cover; }
         .btn-del-img { position: absolute; top: 0; right: 0; background: var(--d); color: white; border: none; width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center; border-radius: 0 0 0 8px; }
@@ -332,7 +331,7 @@
         currentDraft = { 
             name, 
             questions: [{question:"", options:[{text:"", image:""},{text:"", image:""}], answer:"", image:""}], 
-            settings: {shufQ:false, shufA:false, time:0} 
+            settings: {shufQ:false, ShufA:false, time:0} 
         };
         isEditingNew = true; curQIdx = 0; isQuizMode = false;
         closeAllPopups();
@@ -354,7 +353,6 @@
         renderEditPage();
     }
 
-    /* ĐÃ TỐI ƯU HÓA HÀM NÀY ĐỂ NÚT THÊM ẢNH GỌN HƠN */
     function renderEditPage() {
         const q = currentDraft.questions[curQIdx];
         document.getElementById('mainContent').innerHTML = `
@@ -381,10 +379,20 @@
                 `).join('')}
             </div>
             <button onclick="addO()" style="width:100%; margin-top:10px; background:#f1f5f9; color:var(--p); padding:12px; border-radius:12px">+ Thêm đáp án</button>
+            <button onclick="delCurrentQ()" style="width:100%; margin-top:10px; background:#fee2e2; color:var(--d); padding:12px; border-radius:12px">🗑️ Xóa câu này</button>
         `;
         document.getElementById('btnPrev').disabled = (curQIdx === 0);
         document.getElementById('btnNext').innerText = (curQIdx === currentDraft.questions.length - 1) ? "Câu mới +" : "Kế tiếp";
         document.getElementById('pageInfo').innerText = `Câu ${curQIdx + 1} / ${currentDraft.questions.length}`;
+    }
+
+    function delCurrentQ() {
+        if(currentDraft.questions.length <= 1) return showAlert("Phải có ít nhất 1 câu hỏi!");
+        if(confirm("Bạn có chắc chắn muốn xóa câu hỏi này không?")) {
+            currentDraft.questions.splice(curQIdx, 1);
+            if(curQIdx >= currentDraft.questions.length) curQIdx = currentDraft.questions.length - 1;
+            renderEditPage();
+        }
     }
 
     function nav(step) {
