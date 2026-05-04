@@ -84,7 +84,6 @@
             animation: modalShow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
-        /* Đảm bảo Popup cảnh báo luôn nằm trên các popup khác */
         #alertPopup { z-index: 4000; } 
         
         .popup h3 { text-align: center; margin-top: 0; margin-bottom: 15px; font-size: 1.25rem; }
@@ -101,7 +100,26 @@
         .countdown-timer-bar { height: 6px; background: #fbbf24; width: 0%; border-radius: 10px; margin-bottom: 15px; display: none; }
 
         .content-wrapper { display: flex; flex: 1; overflow: hidden; }
-        .sidebar-q { width: 80px; background: #fff; border-right: 1px solid #e2e8f0; overflow-y: auto; padding: 10px; display: none; flex-direction: column; gap: 8px; }
+        
+        /* Cập nhật CSS cho Sidebar để có thể ẩn/mở */
+        .sidebar-q { 
+            width: 80px; 
+            background: #fff; 
+            border-right: 1px solid #e2e8f0; 
+            overflow-y: auto; 
+            padding: 10px; 
+            display: none; 
+            flex-direction: column; 
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        .sidebar-q.collapsed {
+            width: 0;
+            padding: 0;
+            border: none;
+            overflow: hidden;
+        }
+
         .q-num-btn { width: 100%; padding: 10px 0; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 600; cursor: pointer; font-size: 0.8rem;}
         .q-num-btn.active { background: var(--p); color: white; border-color: var(--p); }
 
@@ -114,9 +132,9 @@
             border-radius: 30px; 
             box-shadow: 0 15px 35px rgba(0,0,0,0.05); 
             position: relative;
-	    overflow-x: hidden;
-            overflow-y: auto; /* Thêm thanh trượt dọc */
-            max-height: 80vh; /* Giới hạn chiều cao bảng */
+            overflow-x: hidden;
+            overflow-y: auto;
+            max-height: 80vh;
         }
 
         .input-text { width: 100%; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; margin-bottom: 12px; outline: none; font-size: 1rem; box-sizing: border-box; transition: 0.2s; text-align: center;}
@@ -265,7 +283,13 @@
 <div id="mainOverlay" class="overlay">
     <div class="ov-header">
         <div id="timerDisplay" style="font-weight:800; color:var(--d); background:#fee2e2; padding:4px 12px; border-radius:50px; display:none">00:00</div>
-        <div id="ovTitle" style="font-weight:800; font-size:0.9rem">Đang soạn thảo</div>
+        
+        <!-- Thêm nút Toggle Sidebar tại đây -->
+        <div style="display:flex; align-items:center; gap:10px">
+            <button id="toggleSidebarBtn" class="btn-g" style="padding: 8px; display:none;" onclick="toggleSidebar()">☰</button>
+            <div id="ovTitle" style="font-weight:800; font-size:0.9rem">Đang soạn thảo</div>
+        </div>
+
         <div style="display:flex; gap:8px">
             <button id="saveBtn" class="btn-s" onclick="saveEditor()">Lưu</button>
             <button class="btn-g" onclick="handleExitRequest()">Thoát</button>
@@ -307,6 +331,12 @@
         if(d) exams = JSON.parse(d); 
         checkSharedLink(); 
         renderExams();
+    }
+
+    // Hàm ẩn/mở danh sách câu hỏi
+    function toggleSidebar() {
+        const sidebar = document.getElementById('qSidebar');
+        sidebar.classList.toggle('collapsed');
     }
 
     function downloadSampleJson() {
@@ -392,10 +422,8 @@
         document.querySelectorAll('.popup').forEach(p => p.style.display = 'none'); 
     }
     
-    // Hàm đóng riêng cho Alert để không làm mất Backdrop nếu đang có popup khác bên dưới
     function closeAlertOnly() {
         document.getElementById('alertPopup').style.display = 'none';
-        // Nếu không còn popup nào khác đang mở thì mới đóng backdrop
         const popups = document.querySelectorAll('.popup');
         let anyVisible = false;
         popups.forEach(p => { if(p.style.display === 'block') anyVisible = true; });
@@ -442,6 +470,8 @@
     function openEditorUI() {
         document.getElementById('mainOverlay').style.display = 'flex';
         document.getElementById('qSidebar').style.display = 'flex';
+        document.getElementById('qSidebar').classList.remove('collapsed'); // Reset khi mở
+        document.getElementById('toggleSidebarBtn').style.display = 'flex'; // Hiện nút toggle
         document.getElementById('ovTitle').innerText = "Soạn thảo: " + currentDraft.name;
         document.getElementById('saveBtn').style.display = 'block';
         document.getElementById('navArea').style.display = 'flex';
@@ -485,7 +515,6 @@
         document.getElementById('btnNext').innerText = (curQIdx === currentDraft.questions.length - 1) ? "Câu mới +" : "Kế tiếp";
         document.getElementById('pageInfo').innerText = `Câu ${curQIdx + 1} / ${currentDraft.questions.length}`;
         
-        // Cuộn về đầu bảng khi đổi câu
         document.querySelector('.q-box').scrollTop = 0;
     }
 
@@ -549,6 +578,7 @@
         currentDraft = null; 
         document.getElementById('mainOverlay').style.display = 'none';
         document.getElementById('qSidebar').style.display = 'none';
+        document.getElementById('toggleSidebarBtn').style.display = 'none';
         closeAllPopups();
     }
 
@@ -563,6 +593,7 @@
         currentDraft = null;
         document.getElementById('mainOverlay').style.display = 'none';
         document.getElementById('qSidebar').style.display = 'none';
+        document.getElementById('toggleSidebarBtn').style.display = 'none';
         closeAllPopups();
     }
 
@@ -581,6 +612,7 @@
         document.getElementById('saveBtn').style.display = 'none';
         document.getElementById('navArea').style.display = 'none';
         document.getElementById('qSidebar').style.display = 'none';
+        document.getElementById('toggleSidebarBtn').style.display = 'none'; // Không hiện nút toggle khi thi
         document.getElementById('ovTitle').innerText = ex.name;
         
         clearInterval(timerInterval);
@@ -701,9 +733,8 @@
     function confirmRename() { 
         const val = document.getElementById('newNameInput').value.trim(); 
         if(!val) return;
-        // Kiểm tra trùng tên khi đổi tên
         if(exams.some((ex, idx) => ex.name.toLowerCase() === val.toLowerCase() && idx !== curExIdx)) {
-            return showAlert("Tên đề này đã tồn tại!"); // Cảnh báo này sẽ hiện đè lên bảng đổi tên
+            return showAlert("Tên đề này đã tồn tại!");
         }
         exams[curExIdx].name = val; sync(); renderExams(); closeAllPopups(); 
     }
@@ -718,13 +749,10 @@
                 try {
                     let imported = JSON.parse(ev.target.result);
                     let nameFromFile = f.name.replace('.json','');
-                    
-                    // KIỂM TRA TRÙNG TÊN KHI TẢI FILE JSON
                     if(exams.some(ex => ex.name.toLowerCase() === nameFromFile.toLowerCase())) {
                         showAlert(`Đề thi tên "${nameFromFile}" đã tồn tại. Không thể tải thêm.`);
                         return;
                     }
-                    
                     imported = imported.map(q => ({
                         ...q,
                         options: q.options.map(o => typeof o === 'string' ? {text: o, image: ""} : o)
