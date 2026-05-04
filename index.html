@@ -48,7 +48,7 @@
         .btn-s { background: var(--s); color: white; }
         .btn-del { color: var(--d); background: #fee2e2; }
         .btn-orange { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
-        .btn-blue { background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
+        .btn-admin { background: #f8fafc; color: #1e293b; border: 1px solid #e2e8f0; }
         
         .btn-func-edit { background: #fff7ed; color: #d97706; border: 1px solid #fde68a; }
         .btn-func-mode { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
@@ -83,14 +83,41 @@
             z-index: 3000; width: 90%; max-width: 450px;
             animation: modalShow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+        
+        /* Đảm bảo Popup cảnh báo luôn nằm trên các popup khác */
+        #alertPopup { z-index: 4000; } 
+        
         .popup h3 { text-align: center; margin-top: 0; margin-bottom: 15px; font-size: 1.25rem; }
+
+        .admin-info { text-align: center; }
+        .admin-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid #f0f2f5; margin-bottom: 15px; }
+        .admin-links { display: flex; justify-content: center; gap: 15px; margin: 15px 0; }
+        .admin-links a { text-decoration: none; font-weight: 600; font-size: 0.9rem; color: var(--p); }
 
         .overlay { position: fixed; inset: 0; background: var(--bg); display: none; flex-direction: column; z-index: 2000; }
         .ov-header { background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; position: relative; }
         .progress-bar { height: 4px; background: var(--p); width: 0%; position: absolute; bottom: 0; left: 0; transition: 0.3s; }
+        
+        .countdown-timer-bar { height: 6px; background: #fbbf24; width: 0%; border-radius: 10px; margin-bottom: 15px; display: none; }
+
+        .content-wrapper { display: flex; flex: 1; overflow: hidden; }
+        .sidebar-q { width: 80px; background: #fff; border-right: 1px solid #e2e8f0; overflow-y: auto; padding: 10px; display: none; flex-direction: column; gap: 8px; }
+        .q-num-btn { width: 100%; padding: 10px 0; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc; font-weight: 600; cursor: pointer; font-size: 0.8rem;}
+        .q-num-btn.active { background: var(--p); color: white; border-color: var(--p); }
 
         .content { flex: 1; display: flex; flex-direction: column; padding: 20px; align-items: center; overflow-y: auto; }
-        .q-box { background: white; width: 100%; max-width: 600px; padding: 30px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
+        .q-box { 
+            background: white; 
+            width: 100%; 
+            max-width: 600px; 
+            padding: 30px; 
+            border-radius: 30px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05); 
+            position: relative;
+	    overflow-x: hidden;
+            overflow-y: auto; /* Thêm thanh trượt dọc */
+            max-height: 80vh; /* Giới hạn chiều cao bảng */
+        }
 
         .input-text { width: 100%; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; margin-bottom: 12px; outline: none; font-size: 1rem; box-sizing: border-box; transition: 0.2s; text-align: center;}
         .required-field { border: 2px solid var(--d) !important; background: #fffafb; }
@@ -114,7 +141,7 @@
         .btn-del-img { position: absolute; top: 0; right: 0; background: var(--d); color: white; border: none; width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center; border-radius: 0 0 0 8px; }
 
         .opt-quiz { padding: 16px 20px; border: 2px solid #f1f5f9; border-radius: 18px; margin-bottom: 12px; cursor: pointer; font-weight: 600; background: #fff; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;}
-        .opt-quiz img { max-width: 100%; max-height: 150px; border-radius: 10px; }
+        .opt-quiz img { max-width: 80px; max-height: 80px; border-radius: 8px; object-fit: cover; }
         .correct { background: #dcfce7 !important; border-color: var(--s) !important; color: #065f46 !important; }
         .wrong { background: #fee2e2 !important; border-color: var(--d) !important; color: #991b1b !important; }
         .switch-label { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
@@ -125,6 +152,7 @@
 <div class="topbar">
     <div class="logo">ÔN TRẮC NGHIỆM<br><span style="font-size:0.6rem; color:#64748b; font-weight:400">By ChanhDo</span></div>
     <div class="header-actions" style="display:flex; gap:5px">
+        <button class="btn-admin" onclick="openPopup('adminPopup')">👤 Hỗ Trợ</button>
         <button class="btn-g" onclick="document.getElementById('fileIn').click()">📂 Tải JSON</button>
         <button class="btn-p" onclick="openPopup('createPopup')">✨ Tạo Đề</button>
     </div>
@@ -136,6 +164,42 @@
 </div>
 
 <div id="modalBackdrop" class="modal-backdrop" onclick="closeAllPopups()"></div>
+
+<!-- POPUP ADMIN -->
+<div id="adminPopup" class="popup">
+    <div class="admin-info">
+        <img src="1.jpg" alt="Admin" class="admin-avatar">
+        <h3 style="margin:0">Nguyễn Chánh Đô</h3>
+        <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 10px;">Người phát triển hệ thống</p>
+        <div class="admin-links">
+            <a href="https://www.facebook.com/nguyen.o.537714" target="_blank">Facebook</a>
+            <a href="https://www.tiktok.com/@okiakin" target="_blank">TikTok</a>
+        </div>
+        <hr style="border:0; border-top:1px solid #f1f5f9; margin:15px 0">
+        <button class="btn-func-json" style="width:100%" onclick="downloadSampleJson()">Tải Form JSON</button>
+        <button class="btn-g" style="width:100%; margin-top:10px" onclick="closeAllPopups()">Đóng</button>
+    </div>
+</div>
+
+<div id="saveConfirmPopup" class="popup">
+    <div style="text-align:center; margin-bottom:15px">
+        <div style="background:#dcfce7; width:50px; height:50px; border-radius:15px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; color:var(--s); font-size:1.2rem">✅</div>
+        <h3>Đã lưu thành công!</h3>
+    </div>
+    <p style="text-align:center; color:#64748b; font-size:0.9rem; margin-bottom:20px">Dữ liệu đề thi đã được cập nhật vào hệ thống.</p>
+    <button class="btn-p" style="width:100%" onclick="finishSaving()">Đóng</button>
+</div>
+
+<div id="redoPopup" class="popup">
+    <div style="text-align:center; margin-bottom:15px">
+        <div style="background:#fff7ed; width:50px; height:50px; border-radius:15px; display:flex; align-items:center; justify-content:center; margin:0 auto 10px; color:#c2410c; font-size:1.2rem">🔄</div>
+        <h3>Làm lại?</h3>
+    </div>
+    <div style="display:grid; gap:10px">
+        <button class="btn-p" style="padding:15px" onclick="redoWrongOnly()">Làm lại các câu sai & chưa làm</button>
+        <button class="btn-g" style="padding:15px; border:1px solid #e2e8f0" onclick="redoAll()">Làm lại tất cả</button>
+    </div>
+</div>
 
 <div id="createPopup" class="popup">
     <h3>Tên đề mới</h3>
@@ -149,7 +213,7 @@
         <h3 id="alertTitle" style="margin:0">Thông báo</h3>
     </div>
     <p id="alertMsg" style="text-align:center; color:#64748b; font-size:0.9rem; margin-bottom:20px"></p>
-    <button class="btn-p" style="width:100%" onclick="closeAllPopups()">Đã hiểu</button>
+    <button class="btn-p" style="width:100%" onclick="closeAlertOnly()">Đã hiểu</button>
 </div>
 
 <div id="sharePopup" class="popup">
@@ -208,13 +272,16 @@
         </div>
         <div id="pBar" class="progress-bar"></div>
     </div>
-    <div class="content">
-        <div class="q-box" id="mainContent"></div>
-        <div id="navArea" style="display:flex; gap:10px; margin-top:15px; width:100%; max-width:600px;">
-            <button id="btnPrev" style="flex:1" class="btn-g" onclick="nav(-1)">Quay lại</button>
-            <button id="btnNext" style="flex:1" class="btn-p" onclick="nav(1)">Kế tiếp</button>
+    <div class="content-wrapper">
+        <div id="qSidebar" class="sidebar-q"></div>
+        <div class="content">
+            <div class="q-box" id="mainContent"></div>
+            <div id="navArea" style="display:flex; gap:10px; margin-top:15px; width:100%; max-width:600px;">
+                <button id="btnPrev" style="flex:1" class="btn-g" onclick="nav(-1)">Quay lại</button>
+                <button id="btnNext" style="flex:1" class="btn-p" onclick="nav(1)">Kế tiếp</button>
+            </div>
+            <p id="pageInfo"></p>
         </div>
-        <p id="pageInfo"></p>
     </div>
 </div>
 
@@ -228,6 +295,7 @@
     let timerInterval = null;
     let isQuizMode = false;
     let quizData = [];
+    let wrongQuestions = [];
     let score = 0;
     let answeredCount = 0;
     let originalQuizLength = 0;
@@ -239,6 +307,20 @@
         if(d) exams = JSON.parse(d); 
         checkSharedLink(); 
         renderExams();
+    }
+
+    function downloadSampleJson() {
+        const sample = [{
+            "question": "Câu hỏi mẫu?",
+            "image": "",
+            "options": [{"text": "Đáp án 1", "image": ""}, {"text": "Đáp án 2", "image": ""}],
+            "answer": "Đáp án 1"
+        }];
+        const blob = new Blob([JSON.stringify(sample, null, 2)], {type: "application/json"});
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "form_mau.json";
+        a.click();
     }
 
     async function openShare(i) {
@@ -309,6 +391,16 @@
         document.getElementById('modalBackdrop').style.display = 'none'; 
         document.querySelectorAll('.popup').forEach(p => p.style.display = 'none'); 
     }
+    
+    // Hàm đóng riêng cho Alert để không làm mất Backdrop nếu đang có popup khác bên dưới
+    function closeAlertOnly() {
+        document.getElementById('alertPopup').style.display = 'none';
+        // Nếu không còn popup nào khác đang mở thì mới đóng backdrop
+        const popups = document.querySelectorAll('.popup');
+        let anyVisible = false;
+        popups.forEach(p => { if(p.style.display === 'block') anyVisible = true; });
+        if(!anyVisible) document.getElementById('modalBackdrop').style.display = 'none';
+    }
 
     function showAlert(msg) { 
         document.getElementById('alertMsg').innerText = msg; 
@@ -327,11 +419,11 @@
     function confirmCreate() {
         const name = document.getElementById('createNameInput').value.trim();
         if(!name) return showAlert("Vui lòng nhập tên đề!");
-        if(exams.some(ex => ex.name.toLowerCase() === name.toLowerCase())) return showAlert("Tên đã tồn tại!");
+        if(exams.some(ex => ex.name.toLowerCase() === name.toLowerCase())) return showAlert("Tên đề này đã tồn tại!");
         currentDraft = { 
             name, 
             questions: [{question:"", options:[{text:"", image:""},{text:"", image:""}], answer:"", image:""}], 
-            settings: {shufQ:false, ShufA:false, time:0} 
+            settings: {shufQ:false, shufA:false, time:0} 
         };
         isEditingNew = true; curQIdx = 0; isQuizMode = false;
         closeAllPopups();
@@ -340,6 +432,8 @@
     }
 
     function openEditor(i) {
+        clearInterval(timerInterval);
+        document.getElementById('timerDisplay').style.display = 'none';
         curExIdx = i; isEditingNew = false; isQuizMode = false;
         currentDraft = JSON.parse(JSON.stringify(exams[i]));
         curQIdx = 0; openEditorUI();
@@ -347,6 +441,7 @@
 
     function openEditorUI() {
         document.getElementById('mainOverlay').style.display = 'flex';
+        document.getElementById('qSidebar').style.display = 'flex';
         document.getElementById('ovTitle').innerText = "Soạn thảo: " + currentDraft.name;
         document.getElementById('saveBtn').style.display = 'block';
         document.getElementById('navArea').style.display = 'flex';
@@ -355,6 +450,11 @@
 
     function renderEditPage() {
         const q = currentDraft.questions[curQIdx];
+        const sidebar = document.getElementById('qSidebar');
+        sidebar.innerHTML = currentDraft.questions.map((_, i) => 
+            `<button class="q-num-btn ${i === curQIdx ? 'active' : ''}" onclick="jumpToQ(${i})">${i+1}</button>`
+        ).join('');
+
         document.getElementById('mainContent').innerHTML = `
             <div class="img-area" onclick="document.getElementById('fImg').click()">
                 ${q.image ? `<img src="${q.image}">` : '<span>📷 Thêm ảnh câu hỏi</span>'}
@@ -384,6 +484,14 @@
         document.getElementById('btnPrev').disabled = (curQIdx === 0);
         document.getElementById('btnNext').innerText = (curQIdx === currentDraft.questions.length - 1) ? "Câu mới +" : "Kế tiếp";
         document.getElementById('pageInfo').innerText = `Câu ${curQIdx + 1} / ${currentDraft.questions.length}`;
+        
+        // Cuộn về đầu bảng khi đổi câu
+        document.querySelector('.q-box').scrollTop = 0;
+    }
+
+    function jumpToQ(idx) {
+        curQIdx = idx;
+        renderEditPage();
     }
 
     function delCurrentQ() {
@@ -428,9 +536,20 @@
             }
         }
         if(currentDraft.questions.length < 1) return showAlert("Đề thi cần ít nhất 1 câu hỏi!");
-        if(isEditingNew) exams.push(currentDraft); else exams[curExIdx] = currentDraft;
-        sync(); renderExams(); currentDraft = null; 
+        
+        if(isEditingNew) exams.push(JSON.parse(JSON.stringify(currentDraft))); 
+        else exams[curExIdx] = JSON.parse(JSON.stringify(currentDraft));
+        
+        sync(); 
+        renderExams();
+        openPopup('saveConfirmPopup');
+    }
+
+    function finishSaving() {
+        currentDraft = null; 
         document.getElementById('mainOverlay').style.display = 'none';
+        document.getElementById('qSidebar').style.display = 'none';
+        closeAllPopups();
     }
 
     function handleExitRequest() {
@@ -440,31 +559,45 @@
 
     function forceExit() {
         clearInterval(timerInterval);
+        document.getElementById('timerDisplay').style.display = 'none';
         currentDraft = null;
         document.getElementById('mainOverlay').style.display = 'none';
+        document.getElementById('qSidebar').style.display = 'none';
         closeAllPopups();
     }
 
-    function startQuiz(i) {
-        curExIdx = i; isQuizMode = true; curQIdx = 0; score = 0; answeredCount = 0;
+    function startQuiz(i, customData = null) {
+        curExIdx = i; isQuizMode = true; curQIdx = 0; score = 0; answeredCount = 0; wrongQuestions = [];
         const ex = exams[i];
-        quizData = JSON.parse(JSON.stringify(ex.questions));
+        quizData = customData ? JSON.parse(JSON.stringify(customData)) : JSON.parse(JSON.stringify(ex.questions));
         originalQuizLength = quizData.length;
-        if(ex.settings.shufQ) quizData.sort(() => Math.random() - 0.5);
-        if(ex.settings.shufA) quizData.forEach(q => q.options.sort(() => Math.random() - 0.5));
+        
+        if(!customData) {
+            if(ex.settings.shufQ) quizData.sort(() => Math.random() - 0.5);
+            if(ex.settings.shufA) quizData.forEach(q => q.options.sort(() => Math.random() - 0.5));
+        }
+        
         document.getElementById('mainOverlay').style.display = 'flex';
         document.getElementById('saveBtn').style.display = 'none';
         document.getElementById('navArea').style.display = 'none';
+        document.getElementById('qSidebar').style.display = 'none';
         document.getElementById('ovTitle').innerText = ex.name;
+        
         clearInterval(timerInterval);
         if(ex.settings.time > 0) {
             document.getElementById('timerDisplay').style.display = 'block';
             let sec = ex.settings.time * 60;
-            timerInterval = setInterval(() => {
+            const timerUpdate = () => {
                 let m = Math.floor(sec/60), s = sec%60;
                 document.getElementById('timerDisplay').innerText = `${m<10?'0'+m:m}:${s<10?'0'+s:s}`;
-                if(sec-- <= 0) { clearInterval(timerInterval); finishQuiz(); }
-            }, 1000);
+                if(sec-- <= 0) { 
+                    clearInterval(timerInterval); 
+                    wrongQuestions = wrongQuestions.concat(quizData);
+                    finishQuiz(); 
+                }
+            };
+            timerUpdate();
+            timerInterval = setInterval(timerUpdate, 1000);
         } else document.getElementById('timerDisplay').style.display = 'none';
         showQuizQ();
     }
@@ -475,6 +608,7 @@
         document.getElementById('pBar').style.width = (answeredCount/originalQuizLength*100) + "%";
         document.getElementById('pageInfo').innerText = `TIẾN ĐỘ: ${answeredCount} / ${originalQuizLength}`;
         document.getElementById('mainContent').innerHTML = `
+            <div id="ansCountdownBar" class="countdown-timer-bar"></div>
             ${q.image ? `<img src="${q.image}" style="width:100%; max-height:200px; object-fit:contain; border-radius:15px; margin-bottom:15px">` : ''}
             <h2 style="margin-bottom:20px; font-size:1.1rem; text-align:center">${q.question}</h2>
             <div style="display:grid; gap:12px">
@@ -485,25 +619,43 @@
                     </div>
                 `).join('')}
             </div>
-            <button class="btn-orange" style="width:100%; margin-top:20px; padding:12px" onclick="skipQ()">Bỏ qua câu này</button>
+            <button id="btnSkip" class="btn-orange" style="width:100%; margin-top:20px; padding:12px" onclick="skipQ()">Bỏ qua câu này</button>
         `;
     }
 
     function checkA(el, val, correct) {
         document.querySelectorAll('.opt-quiz').forEach(o => o.style.pointerEvents = 'none');
-        if(val === correct) { el.classList.add('correct'); score++; }
+        const btnSkip = document.getElementById('btnSkip');
+        if(btnSkip) btnSkip.style.display = 'none';
+
+        const qOriginal = quizData[curQIdx];
+        
+        if(val === correct) { el.classList.add('correct'); score++; } 
         else { 
             el.classList.add('wrong'); 
+            wrongQuestions.push(qOriginal);
             document.querySelectorAll('.opt-quiz').forEach(o => {
                 if(o.querySelector('span').innerText === correct) o.classList.add('correct');
             });
         }
-        answeredCount++;
+        
+        const bar = document.getElementById('ansCountdownBar');
+        bar.style.display = 'block';
+        bar.style.width = '100%';
+        bar.style.transition = 'none';
+        
+        setTimeout(() => {
+            bar.style.transition = 'width 2.5s linear';
+            bar.style.width = '0%';
+        }, 10);
+
         setTimeout(() => { 
+            bar.style.display = 'none';
+            answeredCount++;
             quizData.splice(curQIdx, 1); 
             if(curQIdx >= quizData.length) curQIdx = 0; 
             showQuizQ(); 
-        }, 1200);
+        }, 2500);
     }
 
     function skipQ() {
@@ -513,24 +665,49 @@
 
     function finishQuiz() {
         clearInterval(timerInterval);
+        document.getElementById('timerDisplay').style.display = 'none';
         document.getElementById('pBar').style.width = "100%";
+        const wrongCount = originalQuizLength - score;
         document.getElementById('mainContent').innerHTML = `
             <div style="text-align:center; padding:20px">
                 <div style="font-size:3rem; margin-bottom:10px">🎯</div>
-                <h2>Hoàn thành!</h2>
-                <h1 style="color:var(--p); font-size:2.5rem; margin:10px 0">${score}/${originalQuizLength}</h1>
-                <p style="color:#64748b">Bạn đã trả lời đúng ${(score/originalQuizLength*100).toFixed(1)}%</p>
+                <h2>Kết Quả</h2>
+                <div style="display:flex; justify-content:center; gap:20px; margin:20px 0">
+                    <div><b style="color:var(--s); font-size:1.5rem">${score}</b><br><small>Đúng</small></div>
+                    <div><b style="color:var(--d); font-size:1.5rem">${wrongCount}</b><br><small>Chưa đúng</small></div>
+                </div>
+                <h1 style="color:var(--p); font-size:2rem; margin:10px 0">${(score/originalQuizLength*100).toFixed(1)}%</h1>
                 <div style="display:grid; gap:10px; margin-top:20px">
-                    <button class="btn-p" style="padding:15px" onclick="startQuiz(curExIdx)">Làm lại</button>
+                    <button class="btn-p" style="padding:15px" onclick="askRedo()">Làm lại</button>
                     <button class="btn-g" style="padding:15px" onclick="location.reload()">Trở về trang chủ</button>
                 </div>
             </div>`;
     }
 
+    function askRedo() {
+        if(wrongQuestions.length > 0) openPopup('redoPopup'); else redoAll();
+    }
+    function redoWrongOnly() { 
+        closeAllPopups(); 
+        const uniqueWrong = Array.from(new Set(wrongQuestions.map(q => JSON.stringify(q)))).map(s => JSON.parse(s));
+        startQuiz(curExIdx, uniqueWrong); 
+    }
+    function redoAll() { closeAllPopups(); startQuiz(curExIdx); }
+
     function openSettings(i) { curExIdx = i; const s = exams[i].settings; document.getElementById('shufQ').checked = s.shufQ; document.getElementById('shufA').checked = s.shufA; document.getElementById('timeLimit').value = s.time; openPopup('setPopup'); }
     function applySettings() { exams[curExIdx].settings = { shufQ: document.getElementById('shufQ').checked, shufA: document.getElementById('shufA').checked, time: parseInt(document.getElementById('timeLimit').value)||0 }; sync(); closeAllPopups(); }
     function openRename(i) { curExIdx = i; document.getElementById('newNameInput').value = exams[i].name; openPopup('renamePopup'); }
-    function confirmRename() { const val = document.getElementById('newNameInput').value.trim(); if(val) { exams[curExIdx].name = val; sync(); renderExams(); closeAllPopups(); } }
+    
+    function confirmRename() { 
+        const val = document.getElementById('newNameInput').value.trim(); 
+        if(!val) return;
+        // Kiểm tra trùng tên khi đổi tên
+        if(exams.some((ex, idx) => ex.name.toLowerCase() === val.toLowerCase() && idx !== curExIdx)) {
+            return showAlert("Tên đề này đã tồn tại!"); // Cảnh báo này sẽ hiện đè lên bảng đổi tên
+        }
+        exams[curExIdx].name = val; sync(); renderExams(); closeAllPopups(); 
+    }
+
     function openDelete(i) { curExIdx = i; openPopup('deletePopup'); }
     function confirmDelete() { exams.splice(curExIdx, 1); sync(); renderExams(); closeAllPopups(); }
 
@@ -540,11 +717,19 @@
             r.onload = ev => {
                 try {
                     let imported = JSON.parse(ev.target.result);
+                    let nameFromFile = f.name.replace('.json','');
+                    
+                    // KIỂM TRA TRÙNG TÊN KHI TẢI FILE JSON
+                    if(exams.some(ex => ex.name.toLowerCase() === nameFromFile.toLowerCase())) {
+                        showAlert(`Đề thi tên "${nameFromFile}" đã tồn tại. Không thể tải thêm.`);
+                        return;
+                    }
+                    
                     imported = imported.map(q => ({
                         ...q,
                         options: q.options.map(o => typeof o === 'string' ? {text: o, image: ""} : o)
                     }));
-                    exams.push({ name: f.name.replace('.json',''), questions: imported, settings: {shufQ:false, shufA:false, time:0} });
+                    exams.push({ name: nameFromFile, questions: imported, settings: {shufQ:false, shufA:false, time:0} });
                     sync(); renderExams();
                 } catch(e) { showAlert("Lỗi định dạng file!"); }
             };
