@@ -372,7 +372,7 @@
                     document.getElementById('shortenStatus').style.color = "var(--s)";
                 } else { throw new Error("API limit"); }
             } catch (apiErr) {
-                document.getElementById('shortenStatus').innerText = "⚠️ Không thể rút gọn (Link quá dài), hãy dùng file JSON.";
+                document.getElementById('shortenStatus').innerText = "⚠️ Không thể rút gọn (Link quá dài), hãy dùng Xuất JSON.";
                 document.getElementById('shortenStatus').style.color = "var(--d)";
             }
         } catch (e) {
