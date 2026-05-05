@@ -101,7 +101,6 @@
 
         .content-wrapper { display: flex; flex: 1; overflow: hidden; }
         
-        /* Cập nhật CSS cho Sidebar để có thể ẩn/mở */
         .sidebar-q { 
             width: 80px; 
             background: #fff; 
@@ -163,6 +162,11 @@
         .correct { background: #dcfce7 !important; border-color: var(--s) !important; color: #065f46 !important; }
         .wrong { background: #fee2e2 !important; border-color: var(--d) !important; color: #991b1b !important; }
         .switch-label { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+
+        /* Mới thêm: Style cho thanh công cụ căn lề */
+        .align-toolbar { display: flex; gap: 5px; margin-bottom: 8px; justify-content: center; }
+        .btn-align { padding: 6px 10px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; color: #475569; }
+        .btn-align.active { background: var(--p); color: white; border-color: var(--p); }
     </style>
 </head>
 <body>
@@ -284,7 +288,6 @@
     <div class="ov-header">
         <div id="timerDisplay" style="font-weight:800; color:var(--d); background:#fee2e2; padding:4px 12px; border-radius:50px; display:none">00:00</div>
         
-        <!-- Thêm nút Toggle Sidebar tại đây -->
         <div style="display:flex; align-items:center; gap:10px">
             <button id="toggleSidebarBtn" class="btn-g" style="padding: 8px; display:none;" onclick="toggleSidebar()">☰</button>
             <div id="ovTitle" style="font-weight:800; font-size:0.9rem">Đang soạn thảo</div>
@@ -333,7 +336,6 @@
         renderExams();
     }
 
-    // Hàm ẩn/mở danh sách câu hỏi
     function toggleSidebar() {
         const sidebar = document.getElementById('qSidebar');
         sidebar.classList.toggle('collapsed');
@@ -343,6 +345,7 @@
         const sample = [{
             "question": "Câu hỏi mẫu?",
             "image": "",
+            "align": "center",
             "options": [{"text": "Đáp án 1", "image": ""}, {"text": "Đáp án 2", "image": ""}],
             "answer": "Đáp án 1"
         }];
@@ -450,7 +453,7 @@
         if(exams.some(ex => ex.name.toLowerCase() === name.toLowerCase())) return showAlert("Tên đề này đã tồn tại!");
         currentDraft = { 
             name, 
-            questions: [{question:"", options:[{text:"", image:""},{text:"", image:""}], answer:"", image:""}], 
+            questions: [{question:"", options:[{text:"", image:""},{text:"", image:""}], answer:"", image:"", align: "center"}], 
             settings: {shufQ:false, shufA:false, time:0} 
         };
         isEditingNew = true; curQIdx = 0; isQuizMode = false;
@@ -470,8 +473,8 @@
     function openEditorUI() {
         document.getElementById('mainOverlay').style.display = 'flex';
         document.getElementById('qSidebar').style.display = 'flex';
-        document.getElementById('qSidebar').classList.remove('collapsed'); // Reset khi mở
-        document.getElementById('toggleSidebarBtn').style.display = 'flex'; // Hiện nút toggle
+        document.getElementById('qSidebar').classList.remove('collapsed');
+        document.getElementById('toggleSidebarBtn').style.display = 'flex';
         document.getElementById('ovTitle').innerText = "Soạn thảo: " + currentDraft.name;
         document.getElementById('saveBtn').style.display = 'block';
         document.getElementById('navArea').style.display = 'flex';
@@ -480,6 +483,8 @@
 
     function renderEditPage() {
         const q = currentDraft.questions[curQIdx];
+        if(!q.align) q.align = "center"; // Mặc định
+
         const sidebar = document.getElementById('qSidebar');
         sidebar.innerHTML = currentDraft.questions.map((_, i) => 
             `<button class="q-num-btn ${i === curQIdx ? 'active' : ''}" onclick="jumpToQ(${i})">${i+1}</button>`
@@ -490,7 +495,18 @@
                 ${q.image ? `<img src="${q.image}">` : '<span>📷 Thêm ảnh câu hỏi</span>'}
                 <input type="file" id="fImg" hidden accept="image/*" onchange="uploadImg(this, -1)">
             </div>
-            <textarea class="input-text ${!q.question ? 'required-field' : ''}" style="height:80px; text-align:left" placeholder="Nội dung câu hỏi..." oninput="updQ(this)">${q.question}</textarea>
+            
+            <div class="align-toolbar">
+                <button class="btn-align ${q.align==='left'?'active':''}" onclick="setAlign('left')">⬅ Trái</button>
+                <button class="btn-align ${q.align==='center'?'active':''}" onclick="setAlign('center')">⏺ Giữa</button>
+                <button class="btn-align ${q.align==='right'?'active':''}" onclick="setAlign('right')">➡ Phải</button>
+            </div>
+
+            <textarea class="input-text ${!q.question ? 'required-field' : ''}" 
+                      style="height:80px; text-align:${q.align}" 
+                      placeholder="Nội dung câu hỏi..." 
+                      oninput="updQ(this)">${q.question}</textarea>
+            
             <div id="optList">
                 ${q.options.map((o, i) => `
                     <div class="opt-edit-row">
@@ -518,6 +534,11 @@
         document.querySelector('.q-box').scrollTop = 0;
     }
 
+    function setAlign(val) {
+        currentDraft.questions[curQIdx].align = val;
+        renderEditPage();
+    }
+
     function jumpToQ(idx) {
         curQIdx = idx;
         renderEditPage();
@@ -534,7 +555,7 @@
 
     function nav(step) {
         if(step === 1 && curQIdx === currentDraft.questions.length - 1) {
-            currentDraft.questions.push({question:"", options:[{text:"", image:""},{text:"", image:""}], answer:"", image:""});
+            currentDraft.questions.push({question:"", options:[{text:"", image:""},{text:"", image:""}], answer:"", image:"", align: "center"});
         }
         curQIdx += step; renderEditPage();
     }
@@ -612,7 +633,7 @@
         document.getElementById('saveBtn').style.display = 'none';
         document.getElementById('navArea').style.display = 'none';
         document.getElementById('qSidebar').style.display = 'none';
-        document.getElementById('toggleSidebarBtn').style.display = 'none'; // Không hiện nút toggle khi thi
+        document.getElementById('toggleSidebarBtn').style.display = 'none';
         document.getElementById('ovTitle').innerText = ex.name;
         
         clearInterval(timerInterval);
@@ -637,12 +658,14 @@
     function showQuizQ() {
         if(answeredCount >= originalQuizLength) return finishQuiz();
         const q = quizData[curQIdx];
+        const alignment = q.align || 'center'; // Hỗ trợ dữ liệu cũ
+
         document.getElementById('pBar').style.width = (answeredCount/originalQuizLength*100) + "%";
         document.getElementById('pageInfo').innerText = `TIẾN ĐỘ: ${answeredCount} / ${originalQuizLength}`;
         document.getElementById('mainContent').innerHTML = `
             <div id="ansCountdownBar" class="countdown-timer-bar"></div>
             ${q.image ? `<img src="${q.image}" style="width:100%; max-height:200px; object-fit:contain; border-radius:15px; margin-bottom:15px">` : ''}
-            <h2 style="margin-bottom:20px; font-size:1.1rem; text-align:center">${q.question}</h2>
+            <h2 style="margin-bottom:20px; font-size:1.1rem; text-align:${alignment}">${q.question}</h2>
             <div style="display:grid; gap:12px">
                 ${q.options.map(o => `
                     <div class="opt-quiz" onclick="checkA(this, '${o.text.replace(/'/g, "\\'")}', '${q.answer.replace(/'/g, "\\'")}')">
@@ -755,6 +778,7 @@
                     }
                     imported = imported.map(q => ({
                         ...q,
+                        align: q.align || 'center',
                         options: q.options.map(o => typeof o === 'string' ? {text: o, image: ""} : o)
                     }));
                     exams.push({ name: nameFromFile, questions: imported, settings: {shufQ:false, shufA:false, time:0} });
