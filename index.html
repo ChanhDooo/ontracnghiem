@@ -136,6 +136,7 @@
             max-height: 80vh;
         }
 
+        /* FIX: Thêm white-space để hiện xuống dòng */
         .q-text-display {
             white-space: pre-wrap;
             word-wrap: break-word;
@@ -153,52 +154,8 @@
         input[type="radio"]:checked { background: var(--p); border-color: var(--p); }
         input[type="radio"]:checked::after { content: ''; position: absolute; top: 5px; left: 5px; width: 8px; height: 8px; background: white; border-radius: 50%; }
 
-        .editor-tools { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 8px; 
-            gap: 10px;
-        }
-
-        .tool-group { display: flex; gap: 5px; }
-
-        .btn-tool {
-            width: 38px;
-            height: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: all 0.2s;
-            color: #475569;
-        }
-        .btn-tool:hover { background: #f8fafc; border-color: var(--p); color: var(--p); }
-        .btn-tool.active { background: var(--p); color: white; border-color: var(--p); }
-        .btn-tool.has-img { background: #ecfeff; color: #0891b2; border-color: #0891b2; }
-
-        .img-preview-area { 
-            width: 100%; 
-            max-height: 200px; 
-            border-radius: 15px; 
-            overflow: hidden; 
-            margin-bottom: 12px; 
-            border: 1px solid #e2e8f0;
-            display: none;
-            position: relative;
-        }
-        .img-preview-area.active { display: block; }
-        .img-preview-area img { width: 100%; height: 100%; object-fit: contain; background: #f8fafc; }
-        .btn-del-main-img { 
-            position: absolute; top: 10px; right: 10px; 
-            background: rgba(239, 68, 68, 0.9); color: white; 
-            border: none; width: 28px; height: 28px; 
-            border-radius: 8px; cursor: pointer; 
-        }
+        .img-area { width: 100%; height: 180px; border: 2px dashed #cbd5e1; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 15px; overflow: hidden; background: #f8fafc; }
+        .img-area img { width: 100%; height: 100%; object-fit: contain; }
 
         .opt-edit-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 18px; border: 1px solid #e2e8f0; }
         
@@ -207,26 +164,16 @@
         .btn-del-img { position: absolute; top: 0; right: 0; background: var(--d); color: white; border: none; width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center; border-radius: 0 0 0 8px; }
 
         .opt-quiz { padding: 16px 20px; border: 2px solid #f1f5f9; border-radius: 18px; margin-bottom: 12px; cursor: pointer; font-weight: 600; background: #fff; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;}
+        /* FIX: Áp dụng cho cả text đáp án */
         .opt-quiz span { white-space: pre-wrap; }
         .opt-quiz img { max-width: 80px; max-height: 80px; border-radius: 8px; object-fit: cover; }
         .correct { background: #dcfce7 !important; border-color: var(--s) !important; color: #065f46 !important; }
         .wrong { background: #fee2e2 !important; border-color: var(--d) !important; color: #991b1b !important; }
         .switch-label { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
 
-        .type-selector { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; width: 100%; }
-        .btn-type { flex: 1; padding: 12px; border-radius: 12px; background: #f1f5f9; color: #64748b; font-weight: 700; border: 2px solid transparent; transition: 0.3s; }
-        .btn-type.active { background: white; border-color: var(--p); color: var(--p); box-shadow: 0 4px 12px rgba(67, 97, 238, 0.1); }
-
-        .tf-toggle-group { display: flex; gap: 5px; }
-        .tf-btn { width: 35px; height: 35px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; font-weight: 800; cursor: pointer; font-size: 0.8rem; }
-        .tf-btn.active-true { background: var(--s); color: white; border-color: var(--s); }
-        .tf-btn.active-false { background: var(--d); color: white; border-color: var(--d); }
-
-        .tf-quiz-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; background: #f8fafc; margin-bottom: 8px; border: 1px solid transparent; }
-        .tf-quiz-actions { display: flex; gap: 8px; }
-        .tf-quiz-btn { padding: 8px 15px; border-radius: 10px; border: 1px solid #e2e8f0; background: white; font-weight: 800; cursor: pointer; }
-        .tf-quiz-btn.selected-t { background: var(--s); color: white; border-color: var(--s); }
-        .tf-quiz-btn.selected-f { background: var(--d); color: white; border-color: var(--d); }
+        .align-toolbar { display: flex; gap: 5px; margin-bottom: 8px; justify-content: center; }
+        .btn-align { padding: 6px 10px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; color: #475569; }
+        .btn-align.active { background: var(--p); color: white; border-color: var(--p); }
     </style>
 </head>
 <body>
@@ -247,6 +194,7 @@
 
 <div id="modalBackdrop" class="modal-backdrop" onclick="closeAllPopups()"></div>
 
+<!-- POPUP ADMIN -->
 <div id="adminPopup" class="popup">
     <div class="admin-info">
         <img src="1.jpg" alt="Admin" class="admin-avatar">
@@ -311,7 +259,7 @@
 <div id="setPopup" class="popup">
     <h3>Chế Độ</h3>
     <label class="switch-label"><b>Trộn câu hỏi</b> <input type="checkbox" id="shufQ" style="width:20px; height:20px"></label>
-    <label class="switch-label"><b>Trộn đáp án (Áp dụng cả Đ/S)</b> <input type="checkbox" id="shufA" style="width:20px; height:20px"></label>
+    <label class="switch-label"><b>Trộn đáp án</b> <input type="checkbox" id="shufA" style="width:20px; height:20px"></label>
     <div style="padding-top:15px">
         <b style="font-size:0.85rem; color:#64748b">THỜI GIAN (PHÚT)</b>
         <input type="number" id="timeLimit" class="input-text" min="0" placeholder="0 = Không giới hạn">
@@ -385,7 +333,6 @@
     let score = 0;
     let answeredCount = 0;
     let originalQuizLength = 0;
-    let userTfAnswers = {}; 
 
     function sync() { localStorage.setItem(STORAGE_KEY, JSON.stringify(exams)); }
     
@@ -406,7 +353,6 @@
             "question": "Câu hỏi mẫu?",
             "image": "",
             "align": "center",
-            "type": "quiz",
             "options": [{"text": "Đáp án 1", "image": ""}, {"text": "Đáp án 2", "image": ""}],
             "answer": "Đáp án 1"
         }];
@@ -514,7 +460,7 @@
         if(exams.some(ex => ex.name.toLowerCase() === name.toLowerCase())) return showAlert("Tên đề này đã tồn tại!");
         currentDraft = { 
             name, 
-            questions: [{type: "quiz", question:"", options:[{text:"", image:""},{text:"", image:""}], answer:"", image:"", align: "center"}], 
+            questions: [{question:"", options:[{text:"", image:""},{text:"", image:""}], answer:"", image:"", align: "center"}], 
             settings: {shufQ:false, shufA:false, time:0} 
         };
         isEditingNew = true; curQIdx = 0; isQuizMode = false;
@@ -545,109 +491,54 @@
     function renderEditPage() {
         const q = currentDraft.questions[curQIdx];
         if(!q.align) q.align = "center"; 
-        if(!q.type) q.type = "quiz";
 
         const sidebar = document.getElementById('qSidebar');
         sidebar.innerHTML = currentDraft.questions.map((_, i) => 
             `<button class="q-num-btn ${i === curQIdx ? 'active' : ''}" onclick="jumpToQ(${i})">${i+1}</button>`
         ).join('');
 
-        let contentHtml = `
-            <div class="type-selector">
-                <button class="btn-type ${q.type === 'quiz' ? 'active' : ''}" onclick="setQType('quiz')">Trắc nghiệm</button>
-                <button class="btn-type ${q.type === 'tf' ? 'active' : ''}" onclick="setQType('tf')">Đúng / Sai</button>
+        document.getElementById('mainContent').innerHTML = `
+            <div class="img-area" onclick="document.getElementById('fImg').click()">
+                ${q.image ? `<img src="${q.image}">` : '<span>📷 Thêm ảnh câu hỏi</span>'}
+                <input type="file" id="fImg" hidden accept="image/*" onchange="uploadImg(this, -1)">
             </div>
-
-            <div class="img-preview-area ${q.image ? 'active' : ''}">
-                ${q.image ? `<img src="${q.image}"><button class="btn-del-main-img" onclick="removeMainImg()">✕</button>` : ''}
-            </div>
-
-            <div class="editor-tools">
-                <div class="tool-group">
-                    <button class="btn-tool ${q.image ? 'has-img' : ''}" onclick="document.getElementById('fImg').click()" title="Thêm ảnh câu hỏi">
-                        ${q.image ? '🖼️' : '📷'}
-                    </button>
-                    <input type="file" id="fImg" hidden accept="image/*" onchange="uploadImg(this, -1)">
-                </div>
-
-                <div class="tool-group">
-                    <button class="btn-tool ${q.align==='left'?'active':''}" onclick="setAlign('left')" title="Căn trái">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>
-                    </button>
-                    <button class="btn-tool ${q.align==='center'?'active':''}" onclick="setAlign('center')" title="Căn giữa">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="18" y1="18" x2="6" y2="18"></line></svg>
-                    </button>
-                    <button class="btn-tool ${q.align==='right'?'active':''}" onclick="setAlign('right')" title="Căn phải">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="7" y2="18"></line></svg>
-                    </button>
-                </div>
+            
+            <div class="align-toolbar">
+                <button class="btn-align ${q.align==='left'?'active':''}" onclick="setAlign('left')">⬅ Trái</button>
+                <button class="btn-align ${q.align==='center'?'active':''}" onclick="setAlign('center')">⏺ Giữa</button>
+                <button class="btn-align ${q.align==='right'?'active':''}" onclick="setAlign('right')">➡ Phải</button>
             </div>
 
             <textarea class="input-text ${!q.question ? 'required-field' : ''}" 
-                      style="height:100px; text-align:${q.align}; font-weight:600;" 
+                      style="height:80px; text-align:${q.align}" 
                       placeholder="Nội dung câu hỏi..." 
                       oninput="updQ(this)">${q.question}</textarea>
             
-            <div id="optList">`;
+            <div id="optList">
+                ${q.options.map((o, i) => `
+                    <div class="opt-edit-row">
+                        <div style="display:flex; gap:10px; align-items:center">
+                            <input type="radio" name="ans" class="${!q.answer ? 'radio-required' : 'radio-normal'}" ${q.answer === o.text && o.text !== "" ? 'checked' : ''} onchange="setA(${i})">
+                            <input type="text" class="input-text ${!o.text ? 'required-field' : ''}" style="margin:0; flex:1; text-align:left; font-size:0.9rem; padding:10px" value="${o.text}" placeholder="Đáp án ${i+1}" oninput="updO(${i}, this)">
+                            
+                            <div class="opt-img-mini" onclick="document.getElementById('fImgOpt${i}').click()">
+                                ${o.image ? `<img src="${o.image}"><button class="btn-del-img" onclick="event.stopPropagation(); removeOptImg(${i})">✕</button>` : '📷'}
+                            </div>
+                            <input type="file" id="fImgOpt${i}" hidden accept="image/*" onchange="uploadImg(this, ${i})">
 
-        q.options.forEach((o, i) => {
-            contentHtml += `
-                <div class="opt-edit-row">
-                    <div style="display:flex; gap:10px; align-items:center">`;
-            
-            if(q.type === 'quiz') {
-                contentHtml += `<input type="radio" name="ans" class="${!q.answer ? 'radio-required' : 'radio-normal'}" ${q.answer === o.text && o.text !== "" ? 'checked' : ''} onchange="setA(${i})">`;
-            } else {
-                contentHtml += `
-                    <div class="tf-toggle-group">
-                        <button class="tf-btn ${o.correct === true ? 'active-true' : ''}" onclick="setTF(${i}, true)">Đ</button>
-                        <button class="tf-btn ${o.correct === false ? 'active-false' : ''}" onclick="setTF(${i}, false)">S</button>
-                    </div>`;
-            }
-
-            contentHtml += `
-                        <input type="text" class="input-text ${!o.text ? 'required-field' : ''}" style="margin:0; flex:1; text-align:left; font-size:0.9rem; padding:10px" value="${o.text}" placeholder="Đáp án ${i+1}" oninput="updO(${i}, this)">
-                        
-                        <div class="opt-img-mini" onclick="document.getElementById('fImgOpt${i}').click()">
-                            ${o.image ? `<img src="${o.image}"><button class="btn-del-img" onclick="event.stopPropagation(); removeOptImg(${i})">✕</button>` : '📷'}
+                            <button class="btn-del" style="background:none; padding:5px" onclick="delO(${i})">✕</button>
                         </div>
-                        <input type="file" id="fImgOpt${i}" hidden accept="image/*" onchange="uploadImg(this, ${i})">
-
-                        <button class="btn-del" style="background:none; padding:5px" onclick="delO(${i})">✕</button>
                     </div>
-                </div>`;
-        });
-
-        contentHtml += `</div>
-            <button onclick="addO()" style="width:100%; margin-top:10px; background:#f1f5f9; color:var(--p); padding:12px; border-radius:12px; font-weight:700">+ Thêm đáp án</button>
-            <button onclick="delCurrentQ()" style="width:100%; margin-top:10px; background:#fff1f2; color:var(--d); padding:12px; border-radius:12px; font-size:0.85rem">🗑️ Xóa câu hỏi hiện tại</button>
+                `).join('')}
+            </div>
+            <button onclick="addO()" style="width:100%; margin-top:10px; background:#f1f5f9; color:var(--p); padding:12px; border-radius:12px">+ Thêm đáp án</button>
+            <button onclick="delCurrentQ()" style="width:100%; margin-top:10px; background:#fee2e2; color:var(--d); padding:12px; border-radius:12px">🗑️ Xóa câu này</button>
         `;
-
-        document.getElementById('mainContent').innerHTML = contentHtml;
         document.getElementById('btnPrev').disabled = (curQIdx === 0);
         document.getElementById('btnNext').innerText = (curQIdx === currentDraft.questions.length - 1) ? "Câu mới +" : "Kế tiếp";
         document.getElementById('pageInfo').innerText = `Câu ${curQIdx + 1} / ${currentDraft.questions.length}`;
+        
         document.querySelector('.q-box').scrollTop = 0;
-    }
-
-    function removeMainImg() {
-        currentDraft.questions[curQIdx].image = "";
-        renderEditPage();
-    }
-
-    function setQType(type) {
-        currentDraft.questions[curQIdx].type = type;
-        if(type === 'tf') {
-            currentDraft.questions[curQIdx].answer = "";
-        } else {
-            currentDraft.questions[curQIdx].options.forEach(o => delete o.correct);
-        }
-        renderEditPage();
-    }
-
-    function setTF(optIdx, val) {
-        currentDraft.questions[curQIdx].options[optIdx].correct = val;
-        renderEditPage();
     }
 
     function setAlign(val) {
@@ -671,7 +562,7 @@
 
     function nav(step) {
         if(step === 1 && curQIdx === currentDraft.questions.length - 1) {
-            currentDraft.questions.push({type: "quiz", question:"", options:[{text:"", image:""},{text:"", image:""}], answer:"", image:"", align: "center"});
+            currentDraft.questions.push({question:"", options:[{text:"", image:""},{text:"", image:""}], answer:"", image:"", align: "center"});
         }
         curQIdx += step; renderEditPage();
     }
@@ -691,28 +582,14 @@
         for(let j=0; j < currentDraft.questions.length; j++) {
             const q = currentDraft.questions[j];
             const hasQ = q.question.trim() !== "";
-            const hasAllTexts = q.options.length >= 2 && q.options.every(o => o.text.trim() !== "");
-            
-            if(!hasQ || !hasAllTexts) {
+            const hasAllOpts = q.options.length >= 2 && q.options.every(o => o.text.trim() !== "");
+            const hasAns = q.answer !== "" && q.options.some(o => o.text === q.answer);
+            if(!hasQ || !hasAllOpts || !hasAns) {
                 curQIdx = j; renderEditPage();
-                showAlert(`Câu ${j+1} bị thiếu nội dung câu hỏi hoặc đáp án!`);
+                if(!hasQ) showAlert(`Câu ${j+1} bị thiếu nội dung câu hỏi!`);
+                else if(!hasAllOpts) showAlert(`Câu ${j+1} bị thiếu nội dung đáp án!`);
+                else showAlert(`Câu ${j+1} chưa chọn đáp án đúng!`);
                 return;
-            }
-
-            if(q.type === 'quiz') {
-                const hasAns = q.answer !== "" && q.options.some(o => o.text === q.answer);
-                if(!hasAns) {
-                    curQIdx = j; renderEditPage();
-                    showAlert(`Câu ${j+1} chưa chọn đáp án đúng!`);
-                    return;
-                }
-            } else {
-                const allTfSet = q.options.every(o => o.correct === true || o.correct === false);
-                if(!allTfSet) {
-                    curQIdx = j; renderEditPage();
-                    showAlert(`Câu ${j+1} (Đúng/Sai) chưa chọn trạng thái Đ/S cho tất cả các ý!`);
-                    return;
-                }
             }
         }
         if(currentDraft.questions.length < 1) return showAlert("Đề thi cần ít nhất 1 câu hỏi!");
@@ -755,16 +632,8 @@
         originalQuizLength = quizData.length;
         
         if(!customData) {
-            // Trộn câu hỏi chung
             if(ex.settings.shufQ) quizData.sort(() => Math.random() - 0.5);
-            // Trộn đáp án: áp dụng cho cả Quiz và TF (Đúng/Sai)
-            if(ex.settings.shufA) {
-                quizData.forEach(q => {
-                    if (q.options && q.options.length > 0) {
-                        q.options.sort(() => Math.random() - 0.5);
-                    }
-                });
-            }
+            if(ex.settings.shufA) quizData.forEach(q => q.options.sort(() => Math.random() - 0.5));
         }
         
         document.getElementById('mainOverlay').style.display = 'flex';
@@ -797,80 +666,24 @@
         if(answeredCount >= originalQuizLength) return finishQuiz();
         const q = quizData[curQIdx];
         const alignment = q.align || 'center'; 
-        userTfAnswers = {}; 
 
         document.getElementById('pBar').style.width = (answeredCount/originalQuizLength*100) + "%";
         document.getElementById('pageInfo').innerText = `TIẾN ĐỘ: ${answeredCount} / ${originalQuizLength}`;
-        
-        let html = `
+        document.getElementById('mainContent').innerHTML = `
             <div id="ansCountdownBar" class="countdown-timer-bar"></div>
             ${q.image ? `<img src="${q.image}" style="width:100%; max-height:200px; object-fit:contain; border-radius:15px; margin-bottom:15px">` : ''}
-            <h2 class="q-text-display" style="margin-bottom:20px; font-size:1.1rem; text-align:${alignment}">${q.question}</h2>`;
-
-        if(q.type === 'quiz') {
-            html += `<div style="display:grid; gap:12px">
+            <!-- FIX: Thêm class q-text-display -->
+            <h2 class="q-text-display" style="margin-bottom:20px; font-size:1.1rem; text-align:${alignment}">${q.question}</h2>
+            <div style="display:grid; gap:12px">
                 ${q.options.map(o => `
                     <div class="opt-quiz" onclick="checkA(this, '${o.text.replace(/'/g, "\\'")}', '${q.answer.replace(/'/g, "\\'")}')">
                         ${o.image ? `<img src="${o.image}">` : ''}
                         <span>${o.text}</span>
                     </div>
                 `).join('')}
-            </div>`;
-        } else {
-            html += `<div style="display:flex; flex-direction:column; gap:10px">
-                ${q.options.map((o, idx) => `
-                    <div class="tf-quiz-row" id="tfRow${idx}">
-                        <div style="flex:1; display:flex; align-items:center; gap:10px">
-                             ${o.image ? `<img src="${o.image}" style="width:40px; height:40px; border-radius:5px; object-fit:cover">` : ''}
-                             <span style="font-size:0.9rem">${o.text}</span>
-                        </div>
-                        <div class="tf-quiz-actions">
-                            <button class="tf-quiz-btn" onclick="selectTF(${idx}, true, this)">Đ</button>
-                            <button class="tf-quiz-btn" onclick="selectTF(${idx}, false, this)">S</button>
-                        </div>
-                    </div>
-                `).join('')}
-                <button id="btnSubmitTF" class="btn-p" style="width:100%; margin-top:10px; padding:15px" onclick="checkTF()">Xác nhận đáp án</button>
-            </div>`;
-        }
-            
-        html += `<button id="btnSkip" class="btn-orange" style="width:100%; margin-top:20px; padding:12px" onclick="skipQ()">Bỏ qua câu này</button>`;
-        document.getElementById('mainContent').innerHTML = html;
-    }
-
-    function selectTF(optIdx, val, el) {
-        userTfAnswers[optIdx] = val;
-        const parent = el.parentElement;
-        parent.querySelectorAll('.tf-quiz-btn').forEach(b => {
-            b.classList.remove('selected-t', 'selected-f');
-        });
-        el.classList.add(val ? 'selected-t' : 'selected-f');
-    }
-
-    function checkTF() {
-        const q = quizData[curQIdx];
-        if(Object.keys(userTfAnswers).length < q.options.length) {
-            return alert("Vui lòng trả lời tất cả các ý!");
-        }
-
-        document.getElementById('btnSubmitTF').style.display = 'none';
-        document.getElementById('btnSkip').style.display = 'none';
-        
-        let allCorrect = true;
-        q.options.forEach((o, i) => {
-            const row = document.getElementById(`tfRow${i}`);
-            const isUserCorrect = userTfAnswers[i] === o.correct;
-            
-            if(!isUserCorrect) allCorrect = false;
-            
-            row.style.background = isUserCorrect ? "#dcfce7" : "#fee2e2";
-            row.style.border = `1px solid ${isUserCorrect ? 'var(--s)' : 'var(--d)'}`;
-        });
-
-        if(allCorrect) score++;
-        else wrongQuestions.push(q);
-
-        startTransitionTimer();
+            </div>
+            <button id="btnSkip" class="btn-orange" style="width:100%; margin-top:20px; padding:12px" onclick="skipQ()">Bỏ qua câu này</button>
+        `;
     }
 
     function checkA(el, val, correct) {
@@ -878,18 +691,17 @@
         const btnSkip = document.getElementById('btnSkip');
         if(btnSkip) btnSkip.style.display = 'none';
 
+        const qOriginal = quizData[curQIdx];
+        
         if(val === correct) { el.classList.add('correct'); score++; } 
         else { 
             el.classList.add('wrong'); 
-            wrongQuestions.push(quizData[curQIdx]);
+            wrongQuestions.push(qOriginal);
             document.querySelectorAll('.opt-quiz').forEach(o => {
                 if(o.querySelector('span').innerText === correct) o.classList.add('correct');
             });
         }
-        startTransitionTimer();
-    }
-
-    function startTransitionTimer() {
+        
         const bar = document.getElementById('ansCountdownBar');
         bar.style.display = 'block';
         bar.style.width = '100%';
@@ -975,7 +787,6 @@
                     imported = imported.map(q => ({
                         ...q,
                         align: q.align || 'center',
-                        type: q.type || 'quiz',
                         options: q.options.map(o => typeof o === 'string' ? {text: o, image: ""} : o)
                     }));
                     exams.push({ name: nameFromFile, questions: imported, settings: {shufQ:false, shufA:false, time:0} });
